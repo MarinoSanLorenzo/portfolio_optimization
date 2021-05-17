@@ -19,9 +19,9 @@ app.layout = html.Div([
                                 value=["adam", "marino"],
                             ),
 
-    html.Div(id='container'),
-    html.Div(dcc.Graph(id='empty', figure={'data': []}), style={'display': 'none'})
-])
+    html.Div(id='container')
+    # html.Div(dcc.Graph(id='empty', figure={'data': []}), style={'display': 'none'})
+],style={"display":"inline-block"})
 
 
 @app.callback(Output('container', 'children'), [Input('chosen-stocks', 'value')])
