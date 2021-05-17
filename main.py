@@ -3,22 +3,27 @@ import pandas as pd
 
 from src.frontend.callbacks import *
 from src.constants import params
+from src.utils import *
+
+### inputs
+# list of stocks
+# filter by sector
+# number of simulations
+# value of investment
 
 
 def main():
     pass
 
 
-params['START_DATE'] = get_start_date()
-params['END_DATE'] = get_end_date()
-params['STOCKS_LIST'] = get_list_stocks()
+params["stocks_info"] = params.get("STOCKS_INFO")
+params["START_DATE"] = get_start_date()
+params["END_DATE"] = get_end_date()
+params["STOCKS_LIST"] = get_list_stocks()
 
-data = get_data(params)
-### inputs
-# list of stocks
-# number of simulations
-# value of investment
+data_step0 = get_data(params)
+data_step1 = process_data(data_step0, params)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

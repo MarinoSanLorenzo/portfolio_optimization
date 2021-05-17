@@ -4,8 +4,6 @@ from src.constants import *
 __all__ = ["get_list_stocks", "get_start_date", "get_end_date"]
 
 
-
-
 def get_list_stocks() -> list:
     pass
 
