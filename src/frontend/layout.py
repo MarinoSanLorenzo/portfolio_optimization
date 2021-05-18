@@ -7,20 +7,29 @@ from dash_main import app
 from src.constants import params
 from src.frontend.components import stock_list_dropdown
 
+__all__ = ['get_layout']
 
-layout = html.Div(
-    children=[
-        html.H1(children="Smart Invest"),
-        html.H2(children="The best trading tool for young swiss individuals!"),
-        dcc.Tabs(
-            [
-                dcc.Tab(label="Stock market data", children=[stock_list_dropdown]),
-                dcc.Tab(label="Enter your investment inputs"),
-                dcc.Tab(label="Portfolio Optimization"),
-            ]
-        ),
-    ]
-)
+def get_layout(params:dict) -> html.Div:
+    return html.Div(
+        children=[
+            html.H1(children="Smart Invest"),
+            html.H2(children="The best trading tool for young swiss individuals!"),
+            dcc.Tabs(
+                [
+                    dcc.Tab(label="Stock market data",
+                            children=[
+                        stock_list_dropdown,
+                        # dcc.Graph(figure=params.get('open_prices_plot')),
+                        dcc.Graph(id='open_prices_plot_all'),
+                            html.Div(id='container')
+    ]),
+
+                    dcc.Tab(label="Enter your investment inputs"),
+                    dcc.Tab(label="Portfolio Optimization"),
+                ]
+            ),
+        ]
+    )
 
 #
 # dcc.Dropdown(
