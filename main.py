@@ -10,7 +10,7 @@ from src.frontend.layout import layout
 
 
 ### inputs
-#TODO:
+# TODO:
 # list of stocks (list of strings)
 # filter by sector (list of strings)
 # number of simulations (int)
@@ -33,17 +33,11 @@ def main():
     #################         FRONTEND                #################
     ###########################################################
 
-    params['open_prices_plot'] = plot(data_step1, 'Open', 'Open prices')
-    params['open_prices_plot'] = plot(data_step1, 'Open', 'Open prices')
-
+    params["open_prices_plot"] = plot(data_step1, "Open", "Open prices")
+    params["open_prices_plot"] = plot(data_step1, "Open", "Open prices")
 
     app.layout = layout
     app.run_server(debug=True)
-
-
-
-
-
 
 
 if __name__ == "__main__":

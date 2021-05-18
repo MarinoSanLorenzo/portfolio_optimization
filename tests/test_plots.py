@@ -5,6 +5,7 @@ from src.utils import *
 from src.constants import params
 from src.frontend.plots import *
 
+
 @pytest.fixture
 def data() -> pd.DataFrame:
     params["stocks_info"] = params.get("STOCKS_INFO")
@@ -17,12 +18,7 @@ def data() -> pd.DataFrame:
     return data_step1
 
 
-
-
-
-
 class TestPlot:
-
-    def test_plot_open_prices(self, data:pd.DataFrame) -> None:
-        fig = plot(data, 'Open', 'Open prices')
+    def test_plot_open_prices(self, data: pd.DataFrame) -> None:
+        fig = plot(data, "Open", "Open prices")
         fig.show()

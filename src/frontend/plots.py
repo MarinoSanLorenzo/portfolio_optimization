@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from  copy import deepcopy
+from copy import deepcopy
 from pandas.plotting import scatter_matrix
 import plotly.express as px
 import plotly.graph_objects as go
@@ -12,9 +12,8 @@ from src.constants import params
 from dash_main import *
 
 
-__all__ = [
-    "plot"
-        ]
+__all__ = ["plot"]
+
 
 def plot(
     data: pd.DataFrame,

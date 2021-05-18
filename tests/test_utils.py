@@ -39,7 +39,7 @@ def data_step1(data_step0: pd.DataFrame) -> pd.DataFrame:
         lambda x: code_rank_mapping.get(x)
     )
 
-    data_step1 = stocks_data.sort_values(['stock_name', 'Date'])
+    data_step1 = stocks_data.sort_values(["stock_name", "Date"])
     return data_step1
 
 
