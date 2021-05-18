@@ -7,23 +7,35 @@ from dash_main import app
 
 
 
-layout = html.Div([
-    # html.Button(id='button', n_clicks=0, children='Add graph'),
+layout = html.Div(
+    children=[
+    html.H1(children="Smart Invest"),
+    html.H2(children="The best trading tool for young swiss individuals!"),
+    dcc.Tabs( [
+        dcc.Tab(label='Stock market data'),
+        dcc.Tab(label='Enter your investment inputs'),
+        dcc.Tab(label='Portfolio Optimization')
+        ]
+    )
+              ]
 
-    dcc.Dropdown(
-                                id="chosen-stocks",
-                                options=[
-                                    {"label": stock, "value": stock}
-                                    for stock in ["adam", "marino"]
-                                ],
-                                multi=True,
-                                searchable=True,
-                                value=["adam", "marino"],
-                            ),
+)
 
-    html.Div(id='container')
+    #
+    # dcc.Dropdown(
+    #                             id="chosen-stocks",
+    #                             options=[
+    #                                 {"label": stock, "value": stock}
+    #                                 for stock in ["adam", "marino"]
+    #                             ],
+    #                             multi=True,
+    #                             searchable=True,
+    #                             value=["adam", "marino"],
+    #                         ),
+
+    # html.Div(id='container')
     # html.Div(dcc.Graph(id='empty', figure={'data': []}), style={'display': 'none'})
-],style={"display":"inline-block"})
+# ],style={"display":"inline-block"})
 
 
 

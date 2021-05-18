@@ -17,8 +17,8 @@ def data_step0() -> pd.DataFrame:
     if not chosen_stocks:
         chosen_stocks = [stock_name for stock_name, stock in stocks_info.items()]
     chosen_codes = [stocks_info[stock_name].code for stock_name in chosen_stocks]
-    stocks_data = data.DataReader(chosen_codes, "yahoo", start=start_date, end=end_date)
-    return stocks_data
+    data_step0 = data.DataReader(chosen_codes, "yahoo", start=start_date, end=end_date)
+    return data_step0
 
 
 ### preprocess_data
@@ -38,7 +38,8 @@ def data_step1(data_step0: pd.DataFrame) -> pd.DataFrame:
     stocks_data["sector"] = stocks_data.stock_code.apply(
         lambda x: code_rank_mapping.get(x)
     )
-    data_step1 = stocks_data
+
+    data_step1 = stocks_data.sort_values(['stock_name', 'Date'])
     return data_step1
 
 

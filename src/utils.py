@@ -23,6 +23,7 @@ def process_data(data: pd.DataFrame, params: dict) -> pd.DataFrame:
     stocks_data["sector"] = stocks_data.stock_code.apply(
         lambda x: code_rank_mapping.get(x)
     )
+    stocks_data = stocks_data.sort_values(['stock_name', 'Date'])
     return stocks_data
 
 

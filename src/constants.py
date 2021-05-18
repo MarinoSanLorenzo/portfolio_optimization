@@ -30,4 +30,5 @@ params = {
     "STOCKS_INFO": stocks_info,
     "CODE_NAME_MAPPING": code_name_mapping,
     "CODE_RANK_MAPPING": code_rank_mapping,
+    "STYLE_SHEET": ["https://codepen.io/chriddyp/pen/bWLwgP.css"],
 }
