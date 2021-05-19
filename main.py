@@ -53,6 +53,7 @@ def main():
     params["open_prices_plot_lst"] = add_layout_components_for_multiple_plots(plot_low_high_prices, data, params)
     params['covariance_tbl_dt'] = get_data_table(covariance_tbl)
     params['correlation_tbl_dt'] = get_data_table(correlation_tbl)
+    params['open_scatter_matrix'] = plot_scatter_matrix(data, params,'Open')
 
 
     app.layout = get_layout(params)
