@@ -4,30 +4,55 @@ import dash_html_components as html
 import dash_core_components as dcc
 
 from dash_main import app
+from src.constants import params
+from src.frontend.components import stock_list_dropdown
+
+__all__ = ['get_layout']
+
+def get_layout(params:dict) -> html.Div:
+    return html.Div(
+        children=[
+            html.H1(children="Smart Invest"),
+            html.H2(children="The best trading tool for young swiss individuals!"),
+            dcc.Tabs(
+                [
+                    dcc.Tab(label="Stock market data",
+                            children=[
+                        stock_list_dropdown,
+                        dcc.Graph(figure=params.get('open_prices_plot_all')),
+                        html.Hr(),
+                        *params.get('open_prices_plot_lst')
+
+                            # html.Div(id='container'),
 
 
+    ]),
 
-layout = html.Div([
-    # html.Button(id='button', n_clicks=0, children='Add graph'),
+                    dcc.Tab(label="Enter your investment inputs"),
+                    dcc.Tab(label="Portfolio Optimization"),
+                ]
+            ),
 
-    dcc.Dropdown(
-                                id="chosen-stocks",
-                                options=[
-                                    {"label": stock, "value": stock}
-                                    for stock in ["adam", "marino"]
-                                ],
-                                multi=True,
-                                searchable=True,
-                                value=["adam", "marino"],
-                            ),
+        ],
 
-    html.Div(id='container')
-    # html.Div(dcc.Graph(id='empty', figure={'data': []}), style={'display': 'none'})
-],style={"display":"inline-block"})
+    )
+
+#
+# dcc.Dropdown(
+#                             id="chosen-stocks",
+#                             options=[
+#                                 {"label": stock, "value": stock}
+#                                 for stock in ["adam", "marino"]
+#                             ],
+#                             multi=True,
+#                             searchable=True,
+#                             value=["adam", "marino"],
+#                         ),
+
+# html.Div(id='container')
+# html.Div(dcc.Graph(id='empty', figure={'data': []}), style={'display': 'none'})
+# ],style={"display":"inline-block"})
 
 
-
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run_server(debug=True)

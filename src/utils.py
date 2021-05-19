@@ -4,6 +4,8 @@ from pandas_datareader import data as web
 __all__ = ["get_data", "process_data"]
 
 
+
+
 def process_data(data: pd.DataFrame, params: dict) -> pd.DataFrame:
     """
     Stack the data by symbols
@@ -23,6 +25,7 @@ def process_data(data: pd.DataFrame, params: dict) -> pd.DataFrame:
     stocks_data["sector"] = stocks_data.stock_code.apply(
         lambda x: code_rank_mapping.get(x)
     )
+    stocks_data = stocks_data.sort_values(["stock_name", "Date"])
     return stocks_data
 
 
