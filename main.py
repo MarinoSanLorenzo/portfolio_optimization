@@ -13,6 +13,7 @@ from src.frontend.plots import *
 from src.constants import params
 from src.utils import *
 from src.frontend.layout import *
+from src.frontend.components import *
 
 
 ### inputs
@@ -46,11 +47,7 @@ def main():
 
     params['data'] = data
     params["open_prices_plot_all"] = plot(data, "Open", "Open prices")
-    open_prices_plot_lst = []
-    for stock in chosen_stocks:
-        graph, hr = dcc.Graph(figure=plot_low_high_prices(data, stock)), html.Hr()
-        open_prices_plot_lst.append(graph), open_prices_plot_lst.append(hr)
-    params["open_prices_plot_lst"] = open_prices_plot_lst
+    params["open_prices_plot_lst"] = add_layout_components_for_multiple_plots(plot_low_high_prices, data, params)
 
 
     app.layout = get_layout(params)

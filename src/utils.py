@@ -4,6 +4,8 @@ from pandas_datareader import data as web
 __all__ = ["get_data", "process_data"]
 
 
+
+
 def process_data(data: pd.DataFrame, params: dict) -> pd.DataFrame:
     """
     Stack the data by symbols
