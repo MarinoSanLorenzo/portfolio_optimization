@@ -2,6 +2,7 @@ import dash
 from dash.dependencies import Input, Output
 import dash_html_components as html
 import dash_core_components as dcc
+import dash_table
 
 from dash_main import app
 from src.constants import params
@@ -21,7 +22,13 @@ def get_layout(params:dict) -> html.Div:
                         stock_list_dropdown,
                         dcc.Graph(figure=params.get('open_prices_plot_all')),
                         html.Hr(),
-                        *params.get('open_prices_plot_lst')
+                        *params.get('open_prices_plot_lst'),
+                        html.Div('Covariance matrix'),
+                        params.get('covariance_tbl_dt'),
+                        html.Hr(),
+                        html.Div('Correlation matrix'),
+                        params.get('correlation_tbl_dt'),
+
 
                             # html.Div(id='container'),
 
