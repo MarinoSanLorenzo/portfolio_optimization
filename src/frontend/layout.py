@@ -23,13 +23,7 @@ def get_layout(params:dict) -> html.Div:
                         dcc.Graph(figure=params.get('open_prices_plot_all')),
                         html.Hr(),
                         *params.get('open_prices_plot_lst'),
-                                dash_table.DataTable(
-                                    columns=[
-                                        {"name": i, "id": i}
-                                        for i in params.get("covariance_tbl").columns
-                                    ],
-                                    data=params.get("covariance_tbl").to_dict("records"),
-                                )
+                        params.get('covariance_tbl_dt')
 
                             # html.Div(id='container'),
 

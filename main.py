@@ -50,7 +50,7 @@ def main():
     params['data'] = data
     params["open_prices_plot_all"] = plot(data, "Open", "Open prices")
     params["open_prices_plot_lst"] = add_layout_components_for_multiple_plots(plot_low_high_prices, data, params)
-    params['covariance_tbl'] = covariance_tbl
+    params['covariance_tbl_dt'] = get_data_table(covariance_tbl)
 
 
     app.layout = get_layout(params)
