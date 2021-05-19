@@ -14,6 +14,7 @@ from src.constants import params
 from src.utils import *
 from src.frontend.layout import *
 from src.frontend.components import *
+from src.portfolio_optimization import *
 
 
 ### inputs
@@ -37,6 +38,7 @@ def main():
 
     data_step0 = get_data(params)
     data_step1 = process_data(data_step0, params)
+    covariance_tbl = get_covariance_tbl(data_step1)
 
     data = data_step1
 
@@ -48,6 +50,7 @@ def main():
     params['data'] = data
     params["open_prices_plot_all"] = plot(data, "Open", "Open prices")
     params["open_prices_plot_lst"] = add_layout_components_for_multiple_plots(plot_low_high_prices, data, params)
+    params['covariance_tbl'] = covariance_tbl
 
 
     app.layout = get_layout(params)

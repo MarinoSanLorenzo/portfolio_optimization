@@ -4,8 +4,17 @@ import dash_html_components as html
 import dash_core_components as dcc
 from src.constants import params
 from src.frontend.plots import *
+import dash_table
 
-__all__ = ['stock_list_dropdown',  'add_layout_components_for_multiple_plots']
+__all__ = ['stock_list_dropdown',  'add_layout_components_for_multiple_plots', 'get_data_table']
+
+
+def get_data_table(df:pd.DataFrame) -> dash_table.DataTable:
+    return dash_table.DataTable(
+    columns=[{"name": i, "id": i} for i in df.columns],
+    data=df.to_dict('records')
+    )
+
 
 
 def add_layout_components_for_multiple_plots(plot_func:FunctionType, data:pd.DataFrame, params:dict) ->list:
