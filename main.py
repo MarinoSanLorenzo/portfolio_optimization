@@ -39,6 +39,7 @@ def main():
     data_step0 = get_data(params)
     data_step1 = process_data(data_step0, params)
     covariance_tbl = get_covariance_tbl(data_step1)
+    correlation_tbl = get_correlation_tbl(data_step1)
 
     data = data_step1
 
@@ -51,6 +52,7 @@ def main():
     params["open_prices_plot_all"] = plot(data, "Open", "Open prices")
     params["open_prices_plot_lst"] = add_layout_components_for_multiple_plots(plot_low_high_prices, data, params)
     params['covariance_tbl_dt'] = get_data_table(covariance_tbl)
+    params['correlation_tbl_dt'] = get_data_table(correlation_tbl)
 
 
     app.layout = get_layout(params)

@@ -23,7 +23,12 @@ def get_layout(params:dict) -> html.Div:
                         dcc.Graph(figure=params.get('open_prices_plot_all')),
                         html.Hr(),
                         *params.get('open_prices_plot_lst'),
-                        params.get('covariance_tbl_dt')
+                        html.Div('Covariance matrix'),
+                        params.get('covariance_tbl_dt'),
+                        html.Hr(),
+                        html.Div('Correlation matrix'),
+                        params.get('correlation_tbl_dt'),
+
 
                             # html.Div(id='container'),
 

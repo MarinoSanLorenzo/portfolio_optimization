@@ -36,6 +36,7 @@ def covariance_tbl(self, data:pd.DataFrame) -> pd.DataFrame:
     covariance_tbl = adj_close.pct_change().apply(lambda x: np.log(1 + x)).cov()
     covariance_tbl.index = [idx_multi[1] for idx_multi in covariance_tbl.index]
     covariance_tbl.columns = [idx_multi[1] for idx_multi in covariance_tbl.columns]
+    covariance_tbl.insert(0, 'stock_name', list(covariance_tbl.index))
     return covariance_tbl
 
 class TestPortfolioOptimization:
