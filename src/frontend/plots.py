@@ -12,7 +12,49 @@ from src.constants import params
 from dash_main import *
 
 
-__all__ = ["plot"]
+__all__ = ['plot', 'plot_low_high_prices']
+
+
+def add_trace_high_low(
+    fig: plotly.graph_objects.Figure, df: pd.DataFrame
+) -> plotly.graph_objects.Figure:
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=df.High,
+            name="High",
+            line=dict(color="firebrick", width=1, dash="dash"),
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=df.Low,
+            name="Low",
+            line=dict(color="royalblue", width=1, dash="dash"),
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df.Open, name="Open", line=dict(color="firebrick", width=1)
+        )
+    )
+    return fig
+
+def plot_low_high_prices(df: pd.DataFrame, stock_name: str) -> plotly.graph_objects.Figure:
+    df = df.query(f'stock_name=="{stock_name}"')
+    fig = go.Figure()
+    # Create and style traces
+    fig = add_trace_high_low(fig, df)
+    # Edit the layout
+    fig.update_layout(
+        title=f"Average High, Low and Open Prices for the {stock_name} stock",
+        xaxis_title="Date",
+        yaxis_title="Prices",
+    )
+    return fig
+
 
 
 def plot(

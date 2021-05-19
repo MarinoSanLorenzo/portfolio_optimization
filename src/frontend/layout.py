@@ -19,16 +19,22 @@ def get_layout(params:dict) -> html.Div:
                     dcc.Tab(label="Stock market data",
                             children=[
                         stock_list_dropdown,
-                        # dcc.Graph(figure=params.get('open_prices_plot')),
-                        dcc.Graph(id='open_prices_plot_all'),
-                            html.Div(id='container')
+                        dcc.Graph(figure=params.get('open_prices_plot_all')),
+                        html.Hr(),
+                        *params.get('open_prices_plot_lst')
+
+                            # html.Div(id='container'),
+
+
     ]),
 
                     dcc.Tab(label="Enter your investment inputs"),
                     dcc.Tab(label="Portfolio Optimization"),
                 ]
             ),
-        ]
+
+        ],
+
     )
 
 #

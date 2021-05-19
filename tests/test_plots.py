@@ -5,6 +5,10 @@ from src.utils import *
 from src.constants import params
 from src.frontend.plots import *
 
+@pytest.fixture
+def stock() -> str:
+    stock = 'Nestlé'
+    return stock
 
 @pytest.fixture
 def data() -> pd.DataFrame:
@@ -19,6 +23,11 @@ def data() -> pd.DataFrame:
 
 
 class TestPlot:
-    def test_plot_open_prices(self, data: pd.DataFrame) -> None:
+
+    def test_plot_open_prices(self, data: pd.DataFrame, stock:str) -> None:
+        fig = plot_low_high_prices(data, stock)
+        fig.show()
+
+    def test_plot_open_prices_all(self, data: pd.DataFrame) -> None:
         fig = plot(data, "Open", "Open prices")
         fig.show()

@@ -6,7 +6,7 @@ Stock = namedtuple("Stock", "name code sector rank")
 stocks_info = {
     "Nestlé": Stock("Nestlé", "NESN.SW", "Food", "1"),
     "Novartis AG": Stock("Novartis AG", "NOVN.SW", "Pharmaceuticals", "2"),
-    "Roche Holding AG ": Stock("Roche Holding AG", "ROG.SW", "Pharmaceuticals", "3"),
+    "Roche Holding AG": Stock("Roche Holding AG", "ROG.SW", "Pharmaceuticals", "3"),
     "Zurich Insurance Group AG": Stock(
         "Zurich Insurance Group AG", "ZURN.SW", "Insurance", "4"
     ),

@@ -1,7 +1,11 @@
 import numpy as np
 import pandas as pd
 from dash.dependencies import Input, Output
+import dash_core_components as dcc
+import dash_html_components as html
 import plotly
+import plotly.express as px
+import json
 
 from dash_main import app
 from src.frontend.callbacks import *
@@ -23,6 +27,8 @@ def main():
     ###########################################################
     #################       BACKEND                  #################
     ###########################################################
+    chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    params['chosen_stocks'] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
     params["START_DATE"] = get_start_date()
     params["END_DATE"] = get_end_date()
@@ -34,20 +40,18 @@ def main():
     data = data_step1
 
 
-    @app.callback(Output('data', 'data'), [Input('chosen-stocks', 'value')])
-    def update_data(chosen_stocks:list) -> pd.DataFrame:
-        return data.query(f'stock_name in {chosen_stocks}')
-
-    @app.callback(Output('open_prices_plot_all', 'figure'),
-                  [Input('data', 'data')])
-    def update_open_price_plot(data:pd.DataFrame) -> plotly.graph_objects.Figure:
-        return plot(data, "Open", "Open prices")
     ###########################################################
     #################         FRONTEND                #################
     ###########################################################
 
-    params["open_prices_plot"] = plot(data_step1, "Open", "Open prices")
-    params["open_prices_plot"] = plot(data_step1, "Open", "Open prices")
+    params['data'] = data
+    params["open_prices_plot_all"] = plot(data, "Open", "Open prices")
+    open_prices_plot_lst = []
+    for stock in chosen_stocks:
+        graph, hr = dcc.Graph(figure=plot_low_high_prices(data, stock)), html.Hr()
+        open_prices_plot_lst.append(graph), open_prices_plot_lst.append(hr)
+    params["open_prices_plot_lst"] = open_prices_plot_lst
+
 
     app.layout = get_layout(params)
     app.run_server(debug=True)
