@@ -12,7 +12,20 @@ from src.constants import params
 from dash_main import *
 
 
-__all__ = ['plot', 'plot_low_high_prices']
+__all__ = ['plot', 'plot_low_high_prices', 'plot_scatter_matrix']
+
+def plot_scatter_matrix(
+    data: dict, params: dict, variable:str
+) -> plotly.graph_objects.Figure:
+    title = f'Scatter Matrix for {variable} Prices'
+    components = pd.concat(
+        [data.query(f'stock_name=="{stock_name}"')[variable] for stock_name in params.get("STOCKS_INFO")], axis=1
+    )
+    components.columns = [
+        f"{stock.capitalize()} {variable}" for stock in params.get("STOCKS_INFO")
+    ]
+    return px.scatter_matrix(components, title=title)
+
 
 
 def add_trace_high_low(
