@@ -28,7 +28,7 @@ def get_layout(params:dict) -> html.Div:
                         html.Hr(),
                         html.Div('Correlation matrix'),
                         params.get('correlation_tbl_dt'),
-                        params.get('open_scatter_matrix'),
+                        dcc.Graph(figure=params.get('open_scatter_matrix')),
 
 
                             # html.Div(id='container'),
