@@ -6,10 +6,12 @@ from src.constants import params
 from src.frontend.plots import *
 import plotly.express as px
 
+
 @pytest.fixture
 def stock() -> str:
-    stock = 'Nestlé'
+    stock = "Nestlé"
     return stock
+
 
 @pytest.fixture
 def data() -> pd.DataFrame:
@@ -22,28 +24,30 @@ def data() -> pd.DataFrame:
     data_step1 = process_data(data_step0, params)
     return data_step1
 
+
 @pytest.fixture
-def scatter_plot(data:pd.DataFrame) -> None:
-    variable='Open'
-    title = f'Scatter Matrix for {variable} Prices'
+def scatter_plot(data: pd.DataFrame) -> None:
+    variable = "Open"
+    title = f"Scatter Matrix for {variable} Prices"
     components = pd.concat(
-        [data.query(f'stock_name=="{stock_name}"')[variable] for stock_name in params.get("STOCKS_INFO")], axis=1
+        [
+            data.query(f'stock_name=="{stock_name}"')[variable]
+            for stock_name in params.get("STOCKS_INFO")
+        ],
+        axis=1,
     )
     components.columns = [
         f"{stock.capitalize()} {variable}" for stock in params.get("STOCKS_INFO")
     ]
-    fig =px.scatter_matrix(components, title=title)
-
+    fig = px.scatter_matrix(components, title=title)
 
 
 class TestPlot:
-
-
-    def test_scatter_plot(self, data: pd.DataFrame, stock:str) -> None:
-        fig = plot_scatter_matrix(data, params,'Open')
+    def test_scatter_plot(self, data: pd.DataFrame, stock: str) -> None:
+        fig = plot_scatter_matrix(data, params, "Open")
         fig.show()
 
-    def test_plot_open_prices(self, data: pd.DataFrame, stock:str) -> None:
+    def test_plot_open_prices(self, data: pd.DataFrame, stock: str) -> None:
         fig = plot_low_high_prices(data, stock)
         fig.show()
 
