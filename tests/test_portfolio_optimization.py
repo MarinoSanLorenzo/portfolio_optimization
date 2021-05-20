@@ -52,38 +52,39 @@ def portfolio_variance(data: pd.DataFrame) -> float:
     chosen_stocks = params.get("chosen_stocks")
     w = {stock_name: 1 / len(chosen_stocks) for stock_name in chosen_stocks}
     portfolio_variance = covariance_tbl.mul(w, axis=0).mul(w, axis=1).sum().sum()
-    portfolio_share = pd.DataFrame.from_dict(w, orient='index', columns=['portfolio_share'])
+    portfolio_share = pd.DataFrame.from_dict(
+        w, orient="index", columns=["portfolio_share"]
+    )
     portfolio_share.reset_index(drop=False, inplace=True)
-    portfolio_share.rename(columns={'index':'stock_name'}, inplace=True)
+    portfolio_share.rename(columns={"index": "stock_name"}, inplace=True)
     return portfolio_variance
 
+
 @pytest.fixture
-def yearly_returns(data:pd.DataFrame) -> pd.DataFrame:
+def yearly_returns(data: pd.DataFrame) -> pd.DataFrame:
     variable = "Adj Close"
     df = unstacking_stock_name(data, variable)
     returns_yearly = df.resample("Y").last().pct_change().mean()
-    df = pd.DataFrame({'yearly_returns': returns_yearly})
+    df = pd.DataFrame({"yearly_returns": returns_yearly})
     df.index = [multi_idx[1] for multi_idx in df.index]
     df.reset_index(drop=False, inplace=True)
-    df.rename(columns={'index':'stock_name'}, inplace=True)
+    df.rename(columns={"index": "stock_name"}, inplace=True)
     return df
 
 
 class TestPortfolioOptimization:
-
     def test_get_returns(self, data):
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         yearly_returns = get_returns(data)
-        assert 'yearly_returns' in yearly_returns.columns
-        assert yearly_returns.shape == (len(chosen_stocks),2)
-
+        assert "yearly_returns" in yearly_returns.columns
+        assert yearly_returns.shape == (len(chosen_stocks), 2)
 
     def test_calc_portfolio_variance(self, data: pd.DataFrame) -> None:
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         portfolio_variance, portfolio_share = get_portfolio_variance(data, params)
         assert isinstance(portfolio_variance, float)
         assert isinstance(portfolio_share, pd.DataFrame)
-        assert portfolio_share.shape == (len(chosen_stocks),2)
+        assert portfolio_share.shape == (len(chosen_stocks), 2)
 
     def test_get_covariance_and_correlation_matrix(self, data: pd.DataFrame) -> None:
         covariance_tbl = get_covariance_tbl(data)

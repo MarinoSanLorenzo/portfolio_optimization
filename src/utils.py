@@ -7,7 +7,20 @@ __all__ = [
     "remove_multi_index",
     "unstacking_stock_name",
     "pretty_print_percentage",
+    "get_return",
+    "get_stock_data_returns",
 ]
+
+
+def get_stock_data_returns(data: pd.DataFrame, params: dict) -> pd.DataFrame:
+    return pd.concat([get_return(data, stock) for stock in params.get("STOCKS_INFO")])
+
+
+def get_return(data: pd.DataFrame, stock_name: str) -> pd.DataFrame:
+    data = data.query(f'stock_name=="{stock_name}"')
+    data["returns"] = data["Close"].pct_change(1)
+    data["cum_returns"] = (1 + data["returns"]).cumprod()
+    return data
 
 
 def pretty_print_percentage(df: pd.DataFrame) -> pd.DataFrame:

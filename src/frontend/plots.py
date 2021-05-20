@@ -2,9 +2,26 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly
+import plotly.figure_factory as ff
+
+__all__ = ["plot", "plot_low_high_prices", "plot_scatter_matrix", "plot_dist_returns"]
 
 
-__all__ = ["plot", "plot_low_high_prices", "plot_scatter_matrix"]
+def plot_dist_returns(
+    stock_data_returns: pd.DataFrame, params: dict
+) -> plotly.graph_objects.Figure:
+    hist_data = [
+        stock_data_returns.query(f'stock_name=="{stock}"')["returns"]
+        for stock in params.get("STOCKS_INFO")
+    ]
+    group_labels = [stock for stock in params.get("STOCKS_INFO")]
+    try:
+        fig = ff.create_distplot(hist_data, group_labels, bin_size=0.01)
+    except ValueError:
+        for data in hist_data:
+            data.dropna(inplace=True)
+        fig = ff.create_distplot(hist_data, group_labels, bin_size=0.01)
+    return fig
 
 
 def plot_scatter_matrix(

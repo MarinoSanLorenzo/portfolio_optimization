@@ -28,13 +28,13 @@ def get_layout(params: dict) -> html.Div:
                             params.get("correlation_tbl_dt"),
                             dcc.Graph(figure=params.get("open_scatter_matrix")),
                             html.Hr(),
-                            html.Div(f'The default portfolio variance is:\t'
-                                     f' {params.get("default_portfolio_variance")}'),
+                            html.Div(
+                                f"The default portfolio variance is:\t"
+                                f' {params.get("default_portfolio_variance")}'
+                            ),
                             params.get("portfolio_info_dt"),
                             html.Hr(),
-
-
-
+                            params.get("dist_returns_plot")
                             # html.Div(id='container'),
                         ],
                     ),

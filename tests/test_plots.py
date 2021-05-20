@@ -5,6 +5,7 @@ from src.utils import *
 from src.constants import params
 from src.frontend.plots import *
 import plotly.express as px
+from src.portfolio_optimization import *
 
 
 @pytest.fixture
@@ -15,6 +16,8 @@ def stock() -> str:
 
 @pytest.fixture
 def data() -> pd.DataFrame:
+    chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
     params["START_DATE"] = get_start_date()
     params["END_DATE"] = get_end_date()
@@ -22,7 +25,20 @@ def data() -> pd.DataFrame:
 
     data_step0 = get_data(params)
     data_step1 = process_data(data_step0, params)
-    return data_step1
+    covariance_tbl = get_covariance_tbl(data_step1)
+    correlation_tbl = get_correlation_tbl(data_step1)
+    default_portfolio_variance, portfolio_share = get_portfolio_variance(
+        data_step1, params
+    )
+    yearly_returns = get_returns(data_step1)
+
+    portfolio_info = pd.merge(
+        portfolio_share, yearly_returns, how="left", on="stock_name"
+    )
+    data_step2 = get_stock_data_returns(data_step1, params)
+
+    data = data_step2
+    return data
 
 
 @pytest.fixture
@@ -43,6 +59,10 @@ def scatter_plot(data: pd.DataFrame) -> None:
 
 
 class TestPlot:
+    def test_dist_returns_plots(self, data: pd.DataFrame) -> None:
+        fig = plot_dist_returns(data, params)
+        fig.show()
+
     def test_scatter_plot(self, data: pd.DataFrame, stock: str) -> None:
         fig = plot_scatter_matrix(data, params, "Open")
         fig.show()

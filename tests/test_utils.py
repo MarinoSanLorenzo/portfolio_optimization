@@ -4,12 +4,14 @@ import datetime
 from src.frontend.callbacks import *
 from src.constants import params
 from src.utils import *
-from pandas_datareader import data
+from pandas_datareader import data as web
+from src.portfolio_optimization import *
 
 
 @pytest.fixture
 def data_step0() -> pd.DataFrame:
     ### get_data
+    chosen_stocks = list(params.get("STOCKS_INFO").keys())
     start_date = params.get("START_DATE")
     end_date = params.get("END_DATE")
     stocks_info = params.get("STOCKS_INFO")
@@ -17,13 +19,14 @@ def data_step0() -> pd.DataFrame:
     if not chosen_stocks:
         chosen_stocks = [stock_name for stock_name, stock in stocks_info.items()]
     chosen_codes = [stocks_info[stock_name].code for stock_name in chosen_stocks]
-    data_step0 = data.DataReader(chosen_codes, "yahoo", start=start_date, end=end_date)
+    data_step0 = web.DataReader(chosen_codes, "yahoo", start=start_date, end=end_date)
     return data_step0
 
 
 ### preprocess_data
 
 
+@pytest.fixture
 def data_step1(data_step0: pd.DataFrame) -> pd.DataFrame:
     code_name_mapping = params.get("CODE_NAME_MAPPING")
     code_rank_mapping = params.get("CODE_RANK_MAPPING")
@@ -43,7 +46,38 @@ def data_step1(data_step0: pd.DataFrame) -> pd.DataFrame:
     return data_step1
 
 
+@pytest.fixture
+def data() -> pd.DataFrame:
+    chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    params["chosen_stocks"] = chosen_stocks
+    params["stocks_info"] = params.get("STOCKS_INFO")
+    params["START_DATE"] = get_start_date()
+    params["END_DATE"] = get_end_date()
+    params["STOCKS_LIST"] = get_list_stocks()
+
+    data_step0 = get_data(params)
+    data_step1 = process_data(data_step0, params)
+    covariance_tbl = get_covariance_tbl(data_step1)
+    correlation_tbl = get_correlation_tbl(data_step1)
+    default_portfolio_variance, portfolio_share = get_portfolio_variance(
+        data_step1, params
+    )
+    yearly_returns = get_returns(data_step1)
+
+    portfolio_info = pd.merge(
+        portfolio_share, yearly_returns, how="left", on="stock_name"
+    )
+
+    data = data_step1
+    return data
+
+
 class TestUtils:
+    def test_get_stock_returns(self, data: pd.DataFrame) -> None:
+        data = get_stock_data_returns(data, params)
+        assert "cum_returns" in data.columns
+        assert "returns" in data.columns
+
     def test_preprocess_data(self, data_step0):
         data_step1 = process_data(data_step0, params)
         chosen_codes = [stock.code for stock in params.get("STOCKS_INFO").values()]
