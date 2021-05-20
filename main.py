@@ -83,6 +83,7 @@ def main():
     params["portfolios_simulated_dt"] = get_data_table(
         portfolios_simulated, pretty_print_perc=True
     )
+    #TODO: fix percentage
     params["efficient_frontier_plot"] = plot_efficient_frontier(portfolios_simulated)
 
     app.layout = get_layout(params)

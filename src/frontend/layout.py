@@ -45,7 +45,10 @@ def get_layout(params: dict) -> html.Div:
                     ),
                     dcc.Tab(
                         label="Portfolio Optimization",
-                        children=[params.get("efficient_frontier_plot")],
+                        children=[
+                            dcc.Graph(figure=params.get("efficient_frontier_plot"))
+                                ]
+
                     ),
                     dcc.Tab(
                         label="Simulated Portfolios",
