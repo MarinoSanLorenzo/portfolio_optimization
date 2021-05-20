@@ -27,14 +27,18 @@ def data() -> pd.DataFrame:
     data_step1 = process_data(data_step0, params)
     covariance_tbl = get_covariance_tbl(data_step1)
     correlation_tbl = get_correlation_tbl(data_step1)
-    default_portfolio_variance, portfolio_share = get_portfolio_variance(
+    portfolio_properties = get_portfolio_properties(
         data_step1, params
     )
     yearly_returns = get_returns(data_step1)
+    volatility_yearly = get_volatility_yearly(data_step1)
 
     portfolio_info = pd.merge(
-        portfolio_share, yearly_returns, how="left", on="stock_name"
+        portfolio_properties.share_allocation_df, yearly_returns, how="left", on="stock_name"
     )
+    portfolio_info = pd.merge(portfolio_info, volatility_yearly, how="left", on="stock_name"
+    )
+
     data_step2 = get_stock_data_returns(data_step1, params)
 
     data = data_step2
