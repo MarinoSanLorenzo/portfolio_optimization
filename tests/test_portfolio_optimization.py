@@ -47,17 +47,16 @@ def covariance_tbl(data: pd.DataFrame) -> pd.DataFrame:
 
 
 @pytest.fixture
-def portfolio_variance(data: pd.DataFrame) -> float:
-    covariance_tbl = get_covariance_tbl(data, insert_stock_name=False)
-    chosen_stocks = params.get("chosen_stocks")
-    w = {stock_name: 1 / len(chosen_stocks) for stock_name in chosen_stocks}
-    portfolio_variance = covariance_tbl.mul(w, axis=0).mul(w, axis=1).sum().sum()
-    portfolio_share = pd.DataFrame.from_dict(
-        w, orient="index", columns=["portfolio_share"]
-    )
-    portfolio_share.reset_index(drop=False, inplace=True)
-    portfolio_share.rename(columns={"index": "stock_name"}, inplace=True)
-    return portfolio_variance
+def portfolio_properties(data: pd.DataFrame) -> PortfolioReturnsProperties:
+    w=None
+    if not w:
+        chosen_stocks = params.get("chosen_stocks")
+        w = {stock_name: 1 / len(chosen_stocks) for stock_name in chosen_stocks}
+    variance_portfolio_return = get_portfolio_variance(data, w)
+    share_allocation_df = get_shares_allocation_df(w)
+    expected_portfolio_return = get_expected_portfolio_return(data, w)
+    portfolio_properties = PortfolioReturnsProperties(variance_portfolio_return, share_allocation_df, expected_portfolio_return)
+    return portfolio_properties
 
 
 @pytest.fixture
@@ -65,26 +64,50 @@ def yearly_returns(data: pd.DataFrame) -> pd.DataFrame:
     variable = "Adj Close"
     df = unstacking_stock_name(data, variable)
     returns_yearly = df.resample("Y").last().pct_change().mean()
-    df = pd.DataFrame({"yearly_returns": returns_yearly})
+    df = pd.DataFrame({"returns_yearly": returns_yearly})
     df.index = [multi_idx[1] for multi_idx in df.index]
     df.reset_index(drop=False, inplace=True)
     df.rename(columns={"index": "stock_name"}, inplace=True)
     return df
 
+@pytest.fixture
+def volatility_yearly(data:pd.DataFrame) -> pd.DataFrame:
+    variable = "Adj Close"
+    df = unstacking_stock_name(data, variable)
+    volatility_yearly= df.pct_change().apply(lambda x: np.log(1 + x)).std().apply(lambda x: x * np.sqrt(250))
+    df = pd.DataFrame({"volatility_yearly": volatility_yearly})
+    df.index = [multi_idx[1] for multi_idx in df.index]
+    df.reset_index(drop=False, inplace=True)
+    df.rename(columns={"index": "stock_name"}, inplace=True)
+    return df
 
 class TestPortfolioOptimization:
+
+
+    def test_get_volatility(self, data:pd.DataFrame) -> None:
+        chosen_stocks = list(params.get("STOCKS_INFO").keys())
+        volatility_yearly = get_volatility_yearly(data)
+        assert "volatility_yearly" in volatility_yearly.columns
+        assert volatility_yearly.shape == (len(chosen_stocks), 2)
+
+
     def test_get_returns(self, data):
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         yearly_returns = get_returns(data)
-        assert "yearly_returns" in yearly_returns.columns
+        assert "returns_yearly" in yearly_returns.columns
         assert yearly_returns.shape == (len(chosen_stocks), 2)
 
-    def test_calc_portfolio_variance(self, data: pd.DataFrame) -> None:
+    def test_get_portfolio_properties(self, data: pd.DataFrame) -> None:
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
-        portfolio_variance, portfolio_share = get_portfolio_variance(data, params)
+        w = {stock_name: 1 / len(chosen_stocks) for stock_name in chosen_stocks}
+        portfolio_variance, portfolio_share = get_portfolio_variance(data, w), get_shares_allocation_df(w)
+        expected_portfolio_return = get_expected_portfolio_return(data,w)
+        portfolio_properties = get_portfolio_properties(data, params)
         assert isinstance(portfolio_variance, float)
         assert isinstance(portfolio_share, pd.DataFrame)
         assert portfolio_share.shape == (len(chosen_stocks), 2)
+        assert isinstance(expected_portfolio_return, float)
+        assert isinstance(portfolio_properties, PortfolioReturnsProperties)
 
     def test_get_covariance_and_correlation_matrix(self, data: pd.DataFrame) -> None:
         covariance_tbl = get_covariance_tbl(data)
