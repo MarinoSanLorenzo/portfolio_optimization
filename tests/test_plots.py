@@ -66,7 +66,7 @@ def data() -> pd.DataFrame:
 
 @pytest.fixture
 def portfolios_simulated(data_step1:pd.DataFrame) -> pd.DataFrame:
-    num_simulations = 1_000_000
+    num_simulations = 100
     portfolios_simulated = run_portfolios_simulations(data_step1, num_simulations, params)
     return portfolios_simulated
 
