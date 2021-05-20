@@ -14,11 +14,40 @@ __all__ = [
     'get_shares_allocation_df',
     'get_expected_portfolio_return',
     'PortfolioReturnsProperties',
-    'get_volatility_yearly'
+    'get_volatility_yearly',
+    'run_portfolios_simulations'
 ]
 
 PortfolioReturnsProperties = namedtuple('PortfolioReturnsProperties', 'variance_portfolio_return share_allocation_df '
                                                                 'expected_portfolio_return')
+
+def run_portfolios_simulations(data:pd.DataFrame,num_simulations:int,  params:dict) -> pd.DataFrame:
+    chosen_stocks = params.get("chosen_stocks")
+    num_assets = len(chosen_stocks)
+    returns_yearly = get_returns(data).returns_yearly
+    covariance_tbl = get_covariance_tbl(data).drop(columns=['stock_name'])
+    returns = []
+    volatilities = []
+    weights = []
+    for num_simulation in range(num_simulations):
+        weight = np.random.random(num_assets)
+        weight = weight / np.sum(weight)
+        return_ = np.dot(weight, returns_yearly)
+        var = covariance_tbl.mul(weight, axis=0).mul(weight, axis=1).sum().sum()  # Portfolio variance
+        sd = np.sqrt(var)  # Daily standard deviation
+        volatility_yearly = sd * np.sqrt(250)  # Annual standard deviation = volatility
+        volatilities.append(volatility_yearly)
+        returns.append(return_)
+        weights.append(weight)
+
+    data_dic = {'returns': returns, 'volatility': volatilities}
+
+    for counter, stock_name in enumerate(chosen_stocks):
+        # print(counter, symbol)
+        data_dic[stock_name + ' weight'] = [w[counter] for w in weights]
+
+    return pd.DataFrame(data_dic)
+
 
 
 def get_volatility_yearly(data:pd.DataFrame, variable:str='Adj Close') -> pd.DataFrame:

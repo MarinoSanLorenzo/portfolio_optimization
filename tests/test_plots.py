@@ -13,10 +13,28 @@ def stock() -> str:
     stock = "Nestlé"
     return stock
 
+@pytest.fixture
+def data_step1() -> pd.DataFrame:
+    chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    num_simulations = 1_000
+
+    params["chosen_stocks"] = chosen_stocks
+    params["stocks_info"] = params.get("STOCKS_INFO")
+    params["START_DATE"] = get_start_date()
+    params["END_DATE"] = get_end_date()
+    params["STOCKS_LIST"] = get_list_stocks()
+
+    data_step0 = get_data(params)
+    data_step1 = process_data(data_step0, params)
+    return data_step1
+
 
 @pytest.fixture
 def data() -> pd.DataFrame:
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    num_simulations = 1_000
+
+
     params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
     params["START_DATE"] = get_start_date()
@@ -41,8 +59,16 @@ def data() -> pd.DataFrame:
 
     data_step2 = get_stock_data_returns(data_step1, params)
 
+    portfolios_simulated = run_portfolios_simulations(data_step1, num_simulations, params)
+
     data = data_step2
     return data
+
+@pytest.fixture
+def portfolios_simulated(data_step1:pd.DataFrame) -> pd.DataFrame:
+    num_simulations = 1_000_000
+    portfolios_simulated = run_portfolios_simulations(data_step1, num_simulations, params)
+    return portfolios_simulated
 
 
 @pytest.fixture
@@ -63,6 +89,14 @@ def scatter_plot(data: pd.DataFrame) -> None:
 
 
 class TestPlot:
+
+    def test_efficient_frontier_plot(self, portfolios_simulated:pd.DataFrame) -> None:
+        fig = px.scatter(portfolios_simulated, x='volatility', y='returns',  marker='o')
+        fig.show()
+        # portfolios_simulated.plot.scatter(x='volatility', y='returns', marker='o', s=10, alpha=0.3, grid=True,
+        #                                    figsize=[10, 10])
+
+
     def test_dist_returns_plots(self, data: pd.DataFrame) -> None:
         fig = plot_dist_returns(data, params)
         fig.show()

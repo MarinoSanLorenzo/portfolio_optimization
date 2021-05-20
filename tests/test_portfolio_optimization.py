@@ -16,6 +16,9 @@ def stock() -> str:
 @pytest.fixture
 def data() -> pd.DataFrame:
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    num_simulations = 1_000
+
+
     params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
     params["START_DATE"] = get_start_date()
@@ -24,8 +27,24 @@ def data() -> pd.DataFrame:
 
     data_step0 = get_data(params)
     data_step1 = process_data(data_step0, params)
+    covariance_tbl = get_covariance_tbl(data_step1)
+    correlation_tbl = get_correlation_tbl(data_step1)
+    portfolio_properties = get_portfolio_properties(
+        data_step1, params
+    )
+    yearly_returns = get_returns(data_step1)
+    volatility_yearly = get_volatility_yearly(data_step1)
 
-    data = data_step1
+    portfolio_info = pd.merge(
+        portfolio_properties.share_allocation_df, yearly_returns, how="left", on="stock_name"
+    )
+    portfolio_info = pd.merge(portfolio_info, volatility_yearly, how="left", on="stock_name"
+    )
+
+    data_step2 = get_stock_data_returns(data_step1, params)
+
+    data = data_step2
+
     return data
 
 
@@ -81,7 +100,48 @@ def volatility_yearly(data:pd.DataFrame) -> pd.DataFrame:
     df.rename(columns={"index": "stock_name"}, inplace=True)
     return df
 
+@pytest.fixture
+def portfolios(data:pd.DataFrame) -> pd.DataFrame:
+    num_simulations = 1_000
+    chosen_stocks = params.get("chosen_stocks")
+    num_assets = len(chosen_stocks)
+    returns_yearly = get_returns(data).returns_yearly
+    covariance_tbl = get_covariance_tbl(data).drop(columns=['stock_name'])
+    returns = []
+    volatilities = []
+    weights = []
+    for num_simulation in range(num_simulations):
+        weight = np.random.random(num_assets)
+        weight = weight / np.sum(weight)
+        return_ = np.dot(weight, returns_yearly)
+        var = covariance_tbl.mul(weight, axis=0).mul(weight, axis=1).sum().sum()  # Portfolio variance
+        sd = np.sqrt(var)  # Daily standard deviation
+        volatility_yearly = sd * np.sqrt(250)  # Annual standard deviation = volatility
+        volatilities.append(volatility_yearly)
+        returns.append(return_)
+        weights.append(weight)
+
+    data_dic = {'returns': returns, 'volatility': volatilities}
+
+    for counter, stock_name in enumerate(chosen_stocks):
+        # print(counter, symbol)
+        data_dic[stock_name + ' weight'] = [w[counter] for w in weights]
+
+    portfolios = pd.DataFrame(data_dic)
+    return portfolios
+
 class TestPortfolioOptimization:
+
+    def test_run_simulation(self, data):
+        num_simulations = 1_000
+        chosen_stocks = list(params.get("STOCKS_INFO").keys())
+        params['chosen_stocks'] = chosen_stocks
+        chosen_stocks = params.get("chosen_stocks")
+        portfolios = run_portfolios_simulations(data, num_simulations, params)
+        assert portfolios.shape == (num_simulations,len(chosen_stocks)+2)
+
+
+
 
 
     def test_get_volatility(self, data:pd.DataFrame) -> None:

@@ -21,7 +21,12 @@ def main():
     ###########################################################
     #################       BACKEND                  #################
     ###########################################################
+
+    # inputs
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    num_simulations = 1_000
+
+
     params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
     params["START_DATE"] = get_start_date()
@@ -46,6 +51,8 @@ def main():
 
     data_step2 = get_stock_data_returns(data_step1, params)
 
+    portfolios_simulated = run_portfolios_simulations(data_step1, num_simulations, params)
+
     data = data_step2
 
     ###########################################################
@@ -66,6 +73,8 @@ def main():
     params["default_portfolio_expected_return"] = "{:.2%}".format(portfolio_properties.expected_portfolio_return)
     params["portfolio_info_dt"] = get_data_table(portfolio_info, pretty_print_perc=True)
     params["dist_returns_plot"] = plot_dist_returns(data, params)
+    params["portfolios_simulated_dt"] = get_data_table(portfolios_simulated, pretty_print_perc=True)
+
 
     app.layout = get_layout(params)
     app.run_server(debug=True)

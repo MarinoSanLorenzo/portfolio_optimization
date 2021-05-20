@@ -14,6 +14,8 @@ def get_layout(params: dict) -> html.Div:
             html.H2(children="The best trading tool for young swiss individuals!"),
             dcc.Tabs(
                 [
+                    dcc.Tab(label='Summary'),
+                    dcc.Tab(label='Investment data'),
                     dcc.Tab(
                         label="Stock market data",
                         children=[
@@ -41,8 +43,14 @@ def get_layout(params: dict) -> html.Div:
                             # html.Div(id='container'),
                         ],
                     ),
-                    dcc.Tab(label="Enter your investment inputs"),
+
                     dcc.Tab(label="Portfolio Optimization"),
+                    dcc.Tab(label="Simulated Portfolios",
+                            children=[
+                                html.Div('Find below the results of the portfolios Smart Invest simulated for the '
+                                         'sake of your wealth!'),
+                                params.get('portfolios_simulated_dt')
+                            ]),
                 ]
             ),
         ],
