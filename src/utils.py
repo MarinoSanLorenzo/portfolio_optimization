@@ -1,11 +1,53 @@
 import pandas as pd
 from pandas_datareader import data as web
 
-__all__ = ["get_data", "process_data"]
+__all__ = [
+    "get_data",
+    "process_data",
+    "remove_multi_index",
+    "unstacking_stock_name",
+    "pretty_print_percentage",
+    "get_return",
+    "get_stock_data_returns",
+]
 
 
+def get_stock_data_returns(data: pd.DataFrame, params: dict) -> pd.DataFrame:
+    return pd.concat([get_return(data, stock) for stock in params.get("STOCKS_INFO")])
 
 
+def get_return(data: pd.DataFrame, stock_name: str) -> pd.DataFrame:
+    data = data.query(f'stock_name=="{stock_name}"')
+    data["returns"] = data["Close"].pct_change(1)
+    data["cum_returns"] = (1 + data["returns"]).cumprod()
+    return data
+
+
+def pretty_print_percentage(df: pd.DataFrame) -> pd.DataFrame:
+    if isinstance(df, pd.DataFrame):
+        for col in df.columns:
+            try:
+                setattr(df, col, getattr(df, col).apply(lambda x: "{:.2%}".format(x)))
+            except Exception as e:
+                print(e)
+    elif isinstance(df, pd.Series):
+        df = df.apply(lambda x: "{:.2%}".format(x))
+    else:
+        raise NotImplementedError
+    return df
+
+
+def remove_multi_index(df: pd.DataFrame) -> pd.DataFrame:
+    df.index = [idx_multi[1] for idx_multi in df.index]
+    df.columns = [idx_multi[1] for idx_multi in df.columns]
+    return df
+
+
+def unstacking_stock_name(data: pd.DataFrame, variable: str) -> pd.DataFrame:
+    df = data[[variable, "stock_name", "Date"]]
+    df.reset_index(drop=True, inplace=True)
+    df.set_index(["Date", "stock_name"], inplace=True)
+    return df.unstack(level=1)
 
 
 def process_data(data: pd.DataFrame, params: dict) -> pd.DataFrame:

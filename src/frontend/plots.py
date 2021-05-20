@@ -1,33 +1,44 @@
-import numpy as np
 import pandas as pd
-from copy import deepcopy
-from pandas.plotting import scatter_matrix
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly
-from dash.dependencies import Input, Output
-import dash
 import plotly.figure_factory as ff
-from src.constants import params
-from dash_main import *
+
+__all__ = ["plot", "plot_low_high_prices", "plot_scatter_matrix", "plot_dist_returns"]
 
 
-__all__ = ['plot', 'plot_low_high_prices', 'plot_scatter_matrix']
-
+def plot_dist_returns(
+    stock_data_returns: pd.DataFrame, params: dict
+) -> plotly.graph_objects.Figure:
+    hist_data = [
+        stock_data_returns.query(f'stock_name=="{stock}"')["returns"]
+        for stock in params.get("STOCKS_INFO")
+    ]
+    group_labels = [stock for stock in params.get("STOCKS_INFO")]
+    try:
+        fig = ff.create_distplot(hist_data, group_labels, bin_size=0.01)
+    except ValueError:
+        for data in hist_data:
+            data.dropna(inplace=True)
+        fig = ff.create_distplot(hist_data, group_labels, bin_size=0.01)
+    return fig
 
 
 def plot_scatter_matrix(
-    data: dict, params: dict, variable:str
+    data: dict, params: dict, variable: str
 ) -> plotly.graph_objects.Figure:
-    title = f'Scatter Matrix for {variable} Prices'
+    title = f"Scatter Matrix for {variable} Prices"
     components = pd.concat(
-        [data.query(f'stock_name=="{stock_name}"')[variable] for stock_name in params.get("chosen_stocks")], axis=1
+        [
+            data.query(f'stock_name=="{stock_name}"')[variable]
+            for stock_name in params.get("chosen_stocks")
+        ],
+        axis=1,
     )
     components.columns = [
-        f'{stock.capitalize()}' for stock in params.get('chosen_stocks')
+        f"{stock.capitalize()}" for stock in params.get("chosen_stocks")
     ]
     return px.scatter_matrix(components, title=title)
-
 
 
 def add_trace_high_low(
@@ -57,7 +68,10 @@ def add_trace_high_low(
     )
     return fig
 
-def plot_low_high_prices(df: pd.DataFrame, stock_name: str) -> plotly.graph_objects.Figure:
+
+def plot_low_high_prices(
+    df: pd.DataFrame, stock_name: str
+) -> plotly.graph_objects.Figure:
     df = df.query(f'stock_name=="{stock_name}"')
     fig = go.Figure()
     # Create and style traces
@@ -69,7 +83,6 @@ def plot_low_high_prices(df: pd.DataFrame, stock_name: str) -> plotly.graph_obje
         yaxis_title="Prices",
     )
     return fig
-
 
 
 def plot(

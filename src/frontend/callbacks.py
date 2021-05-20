@@ -35,6 +35,7 @@ __all__ = ["get_list_stocks", "get_start_date", "get_end_date"]
 #     return html.Div(graphs)
 #
 
+
 def get_list_stocks() -> list:
     pass
 
