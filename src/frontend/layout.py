@@ -14,8 +14,8 @@ def get_layout(params: dict) -> html.Div:
             html.H2(children="The best trading tool for young swiss individuals!"),
             dcc.Tabs(
                 [
-                    dcc.Tab(label='Summary'),
-                    dcc.Tab(label='Investment data'),
+                    dcc.Tab(label="Summary"),
+                    dcc.Tab(label="Investment data"),
                     dcc.Tab(
                         label="Stock market data",
                         children=[
@@ -30,27 +30,33 @@ def get_layout(params: dict) -> html.Div:
                             params.get("correlation_tbl_dt"),
                             dcc.Graph(figure=params.get("open_scatter_matrix")),
                             html.Hr(),
-                            html.Div('Portfolio Share and expected returns'),
-                            params.get('portfolio_info_dt'),
+                            html.Div("Portfolio Share and expected returns"),
+                            params.get("portfolio_info_dt"),
                             html.Div(
-                                f'The portfolio variance is:\t'
+                                f"The portfolio variance is:\t"
                                 f'{params.get("default_portfolio_variance")} for the above allocation.\n'
                                 f'The portfolio expected return is {params.get("default_portfolio_expected_return")}'
                             ),
                             html.Hr(),
-                            html.Div('Distribution of returns'),
+                            html.Div("Distribution of returns"),
                             dcc.Graph(figure=params.get("dist_returns_plot"))
                             # html.Div(id='container'),
                         ],
                     ),
-
-                    dcc.Tab(label="Portfolio Optimization"),
-                    dcc.Tab(label="Simulated Portfolios",
-                            children=[
-                                html.Div('Find below the results of the portfolios Smart Invest simulated for the '
-                                         'sake of your wealth!'),
-                                params.get('portfolios_simulated_dt')
-                            ]),
+                    dcc.Tab(
+                        label="Portfolio Optimization",
+                        children=[params.get("efficient_frontier_plot")],
+                    ),
+                    dcc.Tab(
+                        label="Simulated Portfolios",
+                        children=[
+                            html.Div(
+                                "Find below the results of the portfolios Smart Invest simulated for the "
+                                "sake of your wealth!"
+                            ),
+                            params.get("portfolios_simulated_dt"),
+                        ],
+                    ),
                 ]
             ),
         ],

@@ -13,6 +13,7 @@ def stock() -> str:
     stock = "Nestlé"
     return stock
 
+
 @pytest.fixture
 def data_step1() -> pd.DataFrame:
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
@@ -34,7 +35,6 @@ def data() -> pd.DataFrame:
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
     num_simulations = 1_000
 
-
     params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
     params["START_DATE"] = get_start_date()
@@ -45,29 +45,36 @@ def data() -> pd.DataFrame:
     data_step1 = process_data(data_step0, params)
     covariance_tbl = get_covariance_tbl(data_step1)
     correlation_tbl = get_correlation_tbl(data_step1)
-    portfolio_properties = get_portfolio_properties(
-        data_step1, params
-    )
+    portfolio_properties = get_portfolio_properties(data_step1, params)
     yearly_returns = get_returns(data_step1)
     volatility_yearly = get_volatility_yearly(data_step1)
 
     portfolio_info = pd.merge(
-        portfolio_properties.share_allocation_df, yearly_returns, how="left", on="stock_name"
+        portfolio_properties.share_allocation_df,
+        yearly_returns,
+        how="left",
+        on="stock_name",
     )
-    portfolio_info = pd.merge(portfolio_info, volatility_yearly, how="left", on="stock_name"
+    portfolio_info = pd.merge(
+        portfolio_info, volatility_yearly, how="left", on="stock_name"
     )
 
     data_step2 = get_stock_data_returns(data_step1, params)
 
-    portfolios_simulated = run_portfolios_simulations(data_step1, num_simulations, params)
+    portfolios_simulated = run_portfolios_simulations(
+        data_step1, num_simulations, params
+    )
 
     data = data_step2
     return data
 
+
 @pytest.fixture
-def portfolios_simulated(data_step1:pd.DataFrame) -> pd.DataFrame:
-    num_simulations = 100
-    portfolios_simulated = run_portfolios_simulations(data_step1, num_simulations, params)
+def portfolios_simulated(data_step1: pd.DataFrame) -> pd.DataFrame:
+    num_simulations = 1_000
+    portfolios_simulated = run_portfolios_simulations(
+        data_step1, num_simulations, params
+    )
     return portfolios_simulated
 
 
@@ -89,13 +96,14 @@ def scatter_plot(data: pd.DataFrame) -> None:
 
 
 class TestPlot:
-
-    def test_efficient_frontier_plot(self, portfolios_simulated:pd.DataFrame) -> None:
-        fig = px.scatter(portfolios_simulated, x='volatility', y='returns',  marker='o')
+    def test_efficient_frontier_plot(self, portfolios_simulated: pd.DataFrame) -> None:
+        fig = px.scatter(
+            portfolios_simulated,
+            x="volatility",
+            y="returns",
+            title="Efficient Frontier",
+        )
         fig.show()
-        # portfolios_simulated.plot.scatter(x='volatility', y='returns', marker='o', s=10, alpha=0.3, grid=True,
-        #                                    figsize=[10, 10])
-
 
     def test_dist_returns_plots(self, data: pd.DataFrame) -> None:
         fig = plot_dist_returns(data, params)

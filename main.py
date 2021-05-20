@@ -24,8 +24,7 @@ def main():
 
     # inputs
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
-    num_simulations = 1_000
-
+    num_simulations = 10_000
 
     params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
@@ -37,21 +36,25 @@ def main():
     data_step1 = process_data(data_step0, params)
     covariance_tbl = get_covariance_tbl(data_step1)
     correlation_tbl = get_correlation_tbl(data_step1)
-    portfolio_properties = get_portfolio_properties(
-        data_step1, params
-    )
+    portfolio_properties = get_portfolio_properties(data_step1, params)
     yearly_returns = get_returns(data_step1)
     volatility_yearly = get_volatility_yearly(data_step1)
 
     portfolio_info = pd.merge(
-        portfolio_properties.share_allocation_df, yearly_returns, how="left", on="stock_name"
+        portfolio_properties.share_allocation_df,
+        yearly_returns,
+        how="left",
+        on="stock_name",
     )
-    portfolio_info = pd.merge(portfolio_info, volatility_yearly, how="left", on="stock_name"
+    portfolio_info = pd.merge(
+        portfolio_info, volatility_yearly, how="left", on="stock_name"
     )
 
     data_step2 = get_stock_data_returns(data_step1, params)
 
-    portfolios_simulated = run_portfolios_simulations(data_step1, num_simulations, params)
+    portfolios_simulated = run_portfolios_simulations(
+        data_step1, num_simulations, params
+    )
 
     data = data_step2
 
@@ -69,12 +72,18 @@ def main():
         correlation_tbl, pretty_print_perc=True
     )
     params["open_scatter_matrix"] = plot_scatter_matrix(data, params, "Open")
-    params["default_portfolio_variance"] = portfolio_properties.variance_portfolio_return
-    params["default_portfolio_expected_return"] = "{:.2%}".format(portfolio_properties.expected_portfolio_return)
+    params[
+        "default_portfolio_variance"
+    ] = portfolio_properties.variance_portfolio_return
+    params["default_portfolio_expected_return"] = "{:.2%}".format(
+        portfolio_properties.expected_portfolio_return
+    )
     params["portfolio_info_dt"] = get_data_table(portfolio_info, pretty_print_perc=True)
     params["dist_returns_plot"] = plot_dist_returns(data, params)
-    params["portfolios_simulated_dt"] = get_data_table(portfolios_simulated, pretty_print_perc=True)
-
+    params["portfolios_simulated_dt"] = get_data_table(
+        portfolios_simulated, pretty_print_perc=True
+    )
+    params["efficient_frontier_plot"] = plot_efficient_frontier(portfolios_simulated)
 
     app.layout = get_layout(params)
     app.run_server(debug=True)

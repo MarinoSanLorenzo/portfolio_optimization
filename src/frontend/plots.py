@@ -4,7 +4,21 @@ import plotly.graph_objects as go
 import plotly
 import plotly.figure_factory as ff
 
-__all__ = ["plot", "plot_low_high_prices", "plot_scatter_matrix", "plot_dist_returns"]
+__all__ = [
+    "plot",
+    "plot_low_high_prices",
+    "plot_scatter_matrix",
+    "plot_dist_returns",
+    "plot_efficient_frontier",
+]
+
+
+def plot_efficient_frontier(
+    portfolios_simulated: pd.DataFrame,
+) -> plotly.graph_objects.Figure:
+    return px.scatter(
+        portfolios_simulated, x="volatility", y="returns", title="Efficient Frontier"
+    )
 
 
 def plot_dist_returns(
