@@ -11,9 +11,32 @@ __all__ = [
     "plot_dist_returns",
     "plot_efficient_frontier",
     "plot_efficient_frontier_continuous_color",
-    "plot_efficient_frontier_optimal_point"
+    "plot_efficient_frontier_optimal_point",
+    'plot_simulated_stocks'
 
 ]
+
+def plot_simulated_stocks(
+    data: pd.DataFrame,
+    y,
+    title=None,
+    x="Date",
+    label="simulation_name",
+    line_shape="spline",
+    render_mode="svg",
+) -> plotly.graph_objects.Figure:
+    return px.line(
+        data,
+        x=x,
+        y=y,
+        title=title,
+        color=label,
+        line_group=label,
+        hover_name=label,
+        line_shape=line_shape,
+        render_mode=render_mode,
+    )
+
 
 def plot_efficient_frontier_continuous_color(portfolios_simulated: pd.DataFrame) -> None:
     return px.scatter(

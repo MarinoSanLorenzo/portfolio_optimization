@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 import pandas as pd
+import datetime
 from src.frontend.callbacks import *
 from src.constants import params
 from src.portfolio_optimization import *
@@ -145,12 +146,90 @@ def simulated_portfolios(data: pd.DataFrame) -> pd.DataFrame:
     simulated_portfolios = add_sharpe_ratio(simulated_portfolios)
     return simulated_portfolios
 
+@pytest.fixture
+def simulated_stock(data) -> np.array:
+    stock_name = 'Nestlé'
+    stock_data = data.query(f'stock_name=="{stock_name}"')
+    last_observed_value = stock_data['Adj Close'][stock_data.last_valid_index()]
+    last_observed_date = stock_data.index[-1]
+    first_simulated_day = last_observed_date + datetime.timedelta(days=1)
+    data_range = pd.date_range(start=first_simulated_day, end=first_simulated_day + datetime.timedelta(days=365),
+                               freq='B')  # business days
+    nb_simulations = 100
+    mean_returns = stock_data.returns.mean()
+    std_returns = stock_data.returns.std()
+    brownian_motion = np.random.normal(mean_returns, std_returns, (len(data_range), nb_simulations))
+    simulated_returns = brownian_motion +1
+    simulated_returns_cum = simulated_returns.cumprod(axis=1)
+    simulated_value_stocks = last_observed_value * simulated_returns_cum
+    return simulated_value_stocks
+
+@pytest.fixture
+def simulated_stocks(data:pd.DataFrame) -> dict:
+    nb_simulations = 100
+    chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    params["chosen_stocks"] = chosen_stocks
+    simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
+    return simulated_stocks
+
+@pytest.fixture
+def weighted_sim_stocks(simulated_stocks: dict, simulated_portfolios: pd.DataFrame) -> dict:
+    chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    params["chosen_stocks"] = chosen_stocks
+    optimal_portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=True, highest_return=True).to_dict()
+    weighted_sim_stocks = {}
+    for stock_name, simulated_stock in simulated_stocks.items():
+        for optimal_stock_weight_name, optimal_weight in optimal_portfolio.items():
+            if stock_name in optimal_stock_weight_name:
+                weighted_sim_stocks[stock_name] = simulated_stock * optimal_weight
+    return weighted_sim_stocks
+
+@pytest.fixture
+def df_simulated_stock(data:pd.DataFrame, simulated_stocks:dict) -> pd.DataFrame:
+        stock_name = 'Nestlé'
+        stock_data = data.query(f'stock_name=="{stock_name}"')
+        data_range = get_data_range(stock_data)
+        simulated_stock = simulated_stocks.get(stock_name)
+        df = pd.DataFrame(simulated_stock, index=data_range, columns=[f'sim_{i}_{stock_name}' for i in range(
+            simulated_stock.shape[1])])
+        s = df.stack()
+        df = pd.DataFrame(s)
+        df.reset_index(drop=False,inplace=True)
+        df.columns = ['Date', 'simulation_name', 'Adj Close Price simulated']
+        return df
 
 class TestPortfolioOptimization:
 
-    def test_get_scenarios(self,simulated_portfolios:pd.DataFrame):
-        investment_amount = 1
-        portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=)
+    def test_get_df_simulated_stocks(self, data:pd.DataFrame, simulated_stocks:dict) -> pd.DataFrame:
+        stock_name = 'Nestlé'
+        df_simulated_stock = get_df_simulated_stock(stock_name, data, simulated_stocks)
+        for col in ['Date', 'simulation_name', 'Adj Close Price simulated']:
+            assert col in df_simulated_stock.columns
+
+
+    def test_weight_stocks(self, simulated_stocks:dict, simulated_portfolios:pd.DataFrame) -> None:
+        chosen_stocks = list(params.get("STOCKS_INFO").keys())
+        params["chosen_stocks"] = chosen_stocks
+        optimal_portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=True, highest_return=True)
+        weighted_sim_stocks = weight_simulated_stocks(simulated_stocks, optimal_portfolio)
+        assert isinstance(weighted_sim_stocks, dict)
+        assert len(weighted_sim_stocks) == len(params.get('chosen_stocks'))
+
+    def test_get_simulated_stocks(self, data:pd.DataFrame)  -> None:
+        nb_simulations = 100
+        chosen_stocks = list(params.get("STOCKS_INFO").keys())
+        params["chosen_stocks"] = chosen_stocks
+        simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
+        assert isinstance(simulated_stocks, dict)
+        assert len(simulated_stocks) == len(params.get('chosen_stocks'))
+
+    def test_get_simulated_stock(self, data:pd.DataFrame)  -> None:
+        stock_name = 'Nestlé'
+        nb_simulations = 100
+        simulated_stock = get_simulated_stock(stock_name, data, nb_simulations)
+        assert type(simulated_stock).__name__ == 'ndarray'
+        assert simulated_stock.shape[1] == nb_simulations
+
     def test_get_sharp_ratio(self, simulated_portfolios:pd.DataFrame) ->None:
         assert 'sharpe_ratio' in simulated_portfolios.columns
 
