@@ -97,6 +97,16 @@ def scatter_plot(data: pd.DataFrame) -> None:
 
 class TestPlot:
 
+    def test_simulated_stocks_plot(self, data:pd.DataFrame) -> None:
+        nb_simulations = 100
+        chosen_stocks = list(params.get("STOCKS_INFO").keys())
+        params["chosen_stocks"] = chosen_stocks
+        simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
+        stock_name = 'Nestlé'
+        df_simulated_stock = get_df_simulated_stock(stock_name, data, simulated_stocks)
+        fig = plot_simulated_stocks(df_simulated_stock, "Adj Close Price simulated", "Simulated Stock Prices")
+        fig.show()
+
     def test_efficient_frontier_optimal_point_plot(self, portfolios_simulated: pd.DataFrame) -> None:
         max_ratio_idx = portfolios_simulated.sharpe_ratio.idxmax()
         portfolios_simulated['optimal'] = 'No'

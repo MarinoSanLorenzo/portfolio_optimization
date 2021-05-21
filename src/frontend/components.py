@@ -5,11 +5,14 @@ import dash_core_components as dcc
 from src.constants import params
 from src.utils import *
 import dash_table
+from src.frontend.plots import *
+from src.portfolio_optimization import *
 
 __all__ = [
     "stock_list_dropdown",
     "add_layout_components_for_multiple_plots",
     "get_data_table",
+    'add_layout_compoment_for_simulated_stock_plots'
 ]
 
 
@@ -21,6 +24,15 @@ def get_data_table(
     return dash_table.DataTable(
         columns=[{"name": i, "id": i} for i in df.columns], data=df.to_dict("records")
     )
+
+
+def add_layout_compoment_for_simulated_stock_plots(data:pd.DataFrame, simulated_stocks:dict) -> list:
+    components = []
+    for stock_name, simulated_stock in simulated_stocks.items():
+        df_simulated_stock = get_df_simulated_stock(stock_name, data, simulated_stocks)
+        fig = plot_simulated_stocks(df_simulated_stock, "Adj Close Price simulated", f"Simulated {stock_name} Prices")
+        components.append(dcc.Graph(figure=fig)), components.append(html.Hr())
+    return components
 
 
 def add_layout_components_for_multiple_plots(

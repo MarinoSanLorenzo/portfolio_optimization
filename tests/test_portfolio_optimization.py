@@ -159,8 +159,9 @@ def simulated_stock(data) -> np.array:
     mean_returns = stock_data.returns.mean()
     std_returns = stock_data.returns.std()
     brownian_motion = np.random.normal(mean_returns, std_returns, (len(data_range), nb_simulations))
-    brownian_motion = brownian_motion.cumsum(axis=1)
-    simulated_value_stocks = last_observed_value * brownian_motion
+    simulated_returns = brownian_motion +1
+    simulated_returns_cum = simulated_returns.cumprod(axis=1)
+    simulated_value_stocks = last_observed_value * simulated_returns_cum
     return simulated_value_stocks
 
 @pytest.fixture
@@ -183,11 +184,27 @@ def weighted_sim_stocks(simulated_stocks: dict, simulated_portfolios: pd.DataFra
                 weighted_sim_stocks[stock_name] = simulated_stock * optimal_weight
     return weighted_sim_stocks
 
+@pytest.fixture
+def df_simulated_stock(data:pd.DataFrame, simulated_stocks:dict) -> pd.DataFrame:
+        stock_name = 'Nestlé'
+        stock_data = data.query(f'stock_name=="{stock_name}"')
+        data_range = get_data_range(stock_data)
+        simulated_stock = simulated_stocks.get(stock_name)
+        df = pd.DataFrame(simulated_stock, index=data_range, columns=[f'sim_{i}_{stock_name}' for i in range(
+            simulated_stock.shape[1])])
+        s = df.stack()
+        df = pd.DataFrame(s)
+        df.reset_index(drop=False,inplace=True)
+        df.columns = ['Date', 'simulation_name', 'Adj Close Price simulated']
+        return df
+
 class TestPortfolioOptimization:
 
     def test_get_df_simulated_stocks(self, data:pd.DataFrame, simulated_stocks:dict) -> pd.DataFrame:
         stock_name = 'Nestlé'
-        stock_data = data.query(f'stock_name=="{stock_name}"')
+        df_simulated_stock = get_df_simulated_stock(stock_name, data, simulated_stocks)
+        for col in ['Date', 'simulation_name', 'Adj Close Price simulated']:
+            assert col in df_simulated_stock.columns
 
 
     def test_weight_stocks(self, simulated_stocks:dict, simulated_portfolios:pd.DataFrame) -> None:

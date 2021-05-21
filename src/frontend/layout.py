@@ -57,6 +57,8 @@ def get_layout(params: dict) -> html.Div:
                             dcc.Graph(figure=params.get("efficient_frontier_optimal_point_plot")),
                             html.Hr(),
                             dcc.Graph(figure=params.get("efficient_frontier_continuous_color_plot")),
+                            html.Hr(),
+                            *params.get('simulated_stock_plots_lst')
                                 ]
 
                     ),

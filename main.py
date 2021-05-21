@@ -62,6 +62,8 @@ def main():
     )
 
     summary_msg = get_investment_summary(portfolios_simulated)
+    num_simulations_stock = 1_000
+    simulated_stocks = get_simulated_stocks(data_step2, num_simulations_stock, params)
     data = data_step2
 
     ###########################################################
@@ -95,6 +97,7 @@ def main():
         portfolios_simulated, pretty_print_perc=True
     )
     params['summary_msg'] = summary_msg
+    params["simulated_stock_plots_lst"] = add_layout_compoment_for_simulated_stock_plots(data, simulated_stocks)
 
 
 

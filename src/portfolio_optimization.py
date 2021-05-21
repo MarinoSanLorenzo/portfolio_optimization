@@ -25,7 +25,9 @@ __all__ = [
     'get_simulated_stock',
     'get_simulated_stocks',
     'weight_simulated_stocks',
-    'Scenarios'
+    'Scenarios',
+    'get_data_range',
+    'get_df_simulated_stock'
 ]
 
 Scenarios = namedtuple('Scenarios', 'simulated_stocks weighted_sim_stocks')
@@ -34,6 +36,19 @@ PortfolioReturnsProperties = namedtuple(
     'PortfolioReturnsProperties',
     'variance_portfolio_return share_allocation_df ' 'expected_portfolio_return',
 )
+
+
+def get_df_simulated_stock(stock_name:str, data: pd.DataFrame, simulated_stocks: dict) -> pd.DataFrame:
+    stock_data = data.query(f'stock_name=="{stock_name}"')
+    data_range = get_data_range(stock_data)
+    simulated_stock = simulated_stocks.get(stock_name)
+    df = pd.DataFrame(simulated_stock, index=data_range, columns=[f'sim_{i}_{stock_name}' for i in range(
+        simulated_stock.shape[1])])
+    s = df.stack()
+    df = pd.DataFrame(s)
+    df.reset_index(drop=False, inplace=True)
+    df.columns = ['Date', 'simulation_name', 'Adj Close Price simulated']
+    return df
 
 def get_scenarios(data:pd.DataFrame, nb_simulations:int, optimal_portfolio:dict,params:dict) -> Scenarios:
     simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
@@ -69,8 +84,10 @@ def get_simulated_stock(stock_name:str, data:pd.DataFrame, nb_simulations:int) -
     mean_returns = stock_data.returns.mean()
     std_returns = stock_data.returns.std()
     brownian_motion = np.random.normal(mean_returns, std_returns, (len(data_range), nb_simulations))
-    brownian_motion_cum = brownian_motion.cumsum(axis=1)
-    return last_observed_value * brownian_motion_cum
+    simulated_returns = brownian_motion +1
+    simulated_returns_cum = simulated_returns.cumprod(axis=1)
+    simulated_value_stocks = last_observed_value * simulated_returns_cum
+    return simulated_value_stocks
 
 
 def add_sharpe_ratio(portfolios_simulated:pd.DataFrame) -> pd.DataFrame:
