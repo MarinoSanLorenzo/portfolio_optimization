@@ -1,8 +1,9 @@
 import pytest
 import pandas as pd
 import datetime
+from collections import defaultdict
 from src.frontend.callbacks import *
-from src.constants import params
+from src.constants import params, Stock
 from src.utils import *
 from pandas_datareader import data as web
 from src.portfolio_optimization import *
@@ -59,16 +60,18 @@ def data() -> pd.DataFrame:
     data_step1 = process_data(data_step0, params)
     covariance_tbl = get_covariance_tbl(data_step1)
     correlation_tbl = get_correlation_tbl(data_step1)
-    portfolio_properties = get_portfolio_properties(
-        data_step1, params
-    )
+    portfolio_properties = get_portfolio_properties(data_step1, params)
     yearly_returns = get_returns(data_step1)
     volatility_yearly = get_volatility_yearly(data_step1)
 
     portfolio_info = pd.merge(
-        portfolio_properties.share_allocation_df, yearly_returns, how="left", on="stock_name"
+        portfolio_properties.share_allocation_df,
+        yearly_returns,
+        how="left",
+        on="stock_name",
     )
-    portfolio_info = pd.merge(portfolio_info, volatility_yearly, how="left", on="stock_name"
+    portfolio_info = pd.merge(
+        portfolio_info, volatility_yearly, how="left", on="stock_name"
     )
 
     data_step2 = get_stock_data_returns(data_step1, params)
@@ -76,8 +79,30 @@ def data() -> pd.DataFrame:
     data = data_step2
     return data
 
+def investment_data() -> pd.DataFrame:
+    d = defaultdict(list)
+    for field in Stock._fields:
+        for stock_name, stock_obj in params.get('STOCKS_INFO').items():
+            d[field].append(getattr(stock_obj, field))
+    df = pd.DataFrame.from_dict(d)
+    return df
+
+
 
 class TestUtils:
+
+    def test_get_investment_data(self) -> None:
+        chosen_stocks = list(params.get("STOCKS_INFO").keys())
+        investment_data = get_investment_data(params)
+        for field in Stock._fields:
+            assert field in investment_data.columns
+
+        assert investment_data.shape == (len(chosen_stocks), len(Stock._fields))
+
+
+
+
+
     def test_get_stock_returns(self, data: pd.DataFrame) -> None:
         data = get_stock_data_returns(data, params)
         assert "cum_returns" in data.columns

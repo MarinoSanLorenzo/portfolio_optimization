@@ -15,8 +15,26 @@ def stock() -> str:
 
 
 @pytest.fixture
+def data_step1() -> pd.DataFrame:
+    chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    num_simulations = 1_000
+
+    params["chosen_stocks"] = chosen_stocks
+    params["stocks_info"] = params.get("STOCKS_INFO")
+    params["START_DATE"] = get_start_date()
+    params["END_DATE"] = get_end_date()
+    params["STOCKS_LIST"] = get_list_stocks()
+
+    data_step0 = get_data(params)
+    data_step1 = process_data(data_step0, params)
+    return data_step1
+
+
+@pytest.fixture
 def data() -> pd.DataFrame:
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    num_simulations = 1_000
+
     params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
     params["START_DATE"] = get_start_date()
@@ -27,22 +45,37 @@ def data() -> pd.DataFrame:
     data_step1 = process_data(data_step0, params)
     covariance_tbl = get_covariance_tbl(data_step1)
     correlation_tbl = get_correlation_tbl(data_step1)
-    portfolio_properties = get_portfolio_properties(
-        data_step1, params
-    )
+    portfolio_properties = get_portfolio_properties(data_step1, params)
     yearly_returns = get_returns(data_step1)
     volatility_yearly = get_volatility_yearly(data_step1)
 
     portfolio_info = pd.merge(
-        portfolio_properties.share_allocation_df, yearly_returns, how="left", on="stock_name"
+        portfolio_properties.share_allocation_df,
+        yearly_returns,
+        how="left",
+        on="stock_name",
     )
-    portfolio_info = pd.merge(portfolio_info, volatility_yearly, how="left", on="stock_name"
+    portfolio_info = pd.merge(
+        portfolio_info, volatility_yearly, how="left", on="stock_name"
     )
 
     data_step2 = get_stock_data_returns(data_step1, params)
 
+    portfolios_simulated = run_portfolios_simulations(
+        data_step1, num_simulations, params
+    )
+
     data = data_step2
     return data
+
+
+@pytest.fixture
+def portfolios_simulated(data_step1: pd.DataFrame) -> pd.DataFrame:
+    num_simulations = 1_000
+    portfolios_simulated = run_portfolios_simulations(
+        data_step1, num_simulations, params
+    )
+    return portfolios_simulated
 
 
 @pytest.fixture
@@ -63,6 +96,41 @@ def scatter_plot(data: pd.DataFrame) -> None:
 
 
 class TestPlot:
+
+    def test_efficient_frontier_optimal_point_plot(self, portfolios_simulated: pd.DataFrame) -> None:
+        max_ratio_idx = portfolios_simulated.sharpe_ratio.idxmax()
+        portfolios_simulated['optimal'] = 'No'
+        portfolios_simulated.loc[max_ratio_idx, 'optimal'] = 'Yes'
+        fig = px.scatter(
+            portfolios_simulated,
+            x="volatility",
+            y="returns",
+            color='optimal',
+            title="Efficient Frontier - Optimal Point",
+        )
+        fig.show()
+
+    def test_efficient_frontier_continuous_color_plot(self, portfolios_simulated: pd.DataFrame) -> None:
+
+        fig = px.scatter(
+            portfolios_simulated,
+            x="volatility",
+            y="returns",
+            color='sharpe_ratio',
+            title="Efficient Frontier - Sharpe Ratio shaded",
+            color_continuous_scale=px.colors.diverging.RdYlGn
+        )
+        fig.show()
+
+    def test_efficient_frontier_plot(self, portfolios_simulated: pd.DataFrame) -> None:
+        fig = px.scatter(
+            portfolios_simulated,
+            x="volatility",
+            y="returns",
+            title="Efficient Frontier",
+        )
+        fig.show()
+
     def test_dist_returns_plots(self, data: pd.DataFrame) -> None:
         fig = plot_dist_returns(data, params)
         fig.show()

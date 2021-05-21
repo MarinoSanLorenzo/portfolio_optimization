@@ -21,31 +21,47 @@ def main():
     ###########################################################
     #################       BACKEND                  #################
     ###########################################################
+
+    # inputs
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
+
+
+
+    num_simulations = 1_000_000
+
     params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
     params["START_DATE"] = get_start_date()
     params["END_DATE"] = get_end_date()
     params["STOCKS_LIST"] = get_list_stocks()
 
+    investment_data = get_investment_data(params)
+    your_investment_data = investment_data[investment_data.name.isin(chosen_stocks)]
     data_step0 = get_data(params)
     data_step1 = process_data(data_step0, params)
     covariance_tbl = get_covariance_tbl(data_step1)
     correlation_tbl = get_correlation_tbl(data_step1)
-    portfolio_properties = get_portfolio_properties(
-        data_step1, params
-    )
+    portfolio_properties = get_portfolio_properties(data_step1, params)
     yearly_returns = get_returns(data_step1)
     volatility_yearly = get_volatility_yearly(data_step1)
 
     portfolio_info = pd.merge(
-        portfolio_properties.share_allocation_df, yearly_returns, how="left", on="stock_name"
+        portfolio_properties.share_allocation_df,
+        yearly_returns,
+        how="left",
+        on="stock_name",
     )
-    portfolio_info = pd.merge(portfolio_info, volatility_yearly, how="left", on="stock_name"
+    portfolio_info = pd.merge(
+        portfolio_info, volatility_yearly, how="left", on="stock_name"
     )
 
     data_step2 = get_stock_data_returns(data_step1, params)
 
+    portfolios_simulated = run_portfolios_simulations(
+        data_step1, num_simulations, params
+    )
+
+    summary_msg = get_investment_summary(portfolios_simulated)
     data = data_step2
 
     ###########################################################
@@ -53,6 +69,7 @@ def main():
     ###########################################################
 
     params["data"] = data
+    params['your_investment_data'] = get_data_table(your_investment_data)
     params["open_prices_plot_all"] = plot(data, "Open", "Open prices")
     params["open_prices_plot_lst"] = add_layout_components_for_multiple_plots(
         plot_low_high_prices, data, params
@@ -62,10 +79,24 @@ def main():
         correlation_tbl, pretty_print_perc=True
     )
     params["open_scatter_matrix"] = plot_scatter_matrix(data, params, "Open")
-    params["default_portfolio_variance"] = portfolio_properties.variance_portfolio_return
-    params["default_portfolio_expected_return"] = "{:.2%}".format(portfolio_properties.expected_portfolio_return)
+    params[
+        "default_portfolio_variance"
+    ] = portfolio_properties.variance_portfolio_return
+    params["default_portfolio_expected_return"] = "{:.2%}".format(
+        portfolio_properties.expected_portfolio_return
+    )
     params["portfolio_info_dt"] = get_data_table(portfolio_info, pretty_print_perc=True)
     params["dist_returns_plot"] = plot_dist_returns(data, params)
+    params["efficient_frontier_optimal_point_plot"] = plot_efficient_frontier_optimal_point(portfolios_simulated)
+    params["efficient_frontier_continuous_color_plot"] = plot_efficient_frontier_continuous_color(portfolios_simulated)
+
+
+    params["portfolios_simulated_dt"] = get_data_table(
+        portfolios_simulated, pretty_print_perc=True
+    )
+    params['summary_msg'] = summary_msg
+
+
 
     app.layout = get_layout(params)
     app.run_server(debug=True)
