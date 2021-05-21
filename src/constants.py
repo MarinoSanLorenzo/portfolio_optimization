@@ -1,7 +1,7 @@
 import datetime
 from collections import namedtuple
 
-Stock = namedtuple("Stock", "name code sector rank")
+Stock = namedtuple("Stock", "name code sector market_rank")
 
 stocks_info = {
     "Nestlé": Stock("Nestlé", "NESN.SW", "Food", "1"),

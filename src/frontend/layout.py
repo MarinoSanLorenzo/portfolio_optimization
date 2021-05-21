@@ -14,8 +14,16 @@ def get_layout(params: dict) -> html.Div:
             html.H2(children="The best trading tool for young swiss individuals!"),
             dcc.Tabs(
                 [
-                    dcc.Tab(label="Summary"),
-                    dcc.Tab(label="Investment data"),
+                    dcc.Tab(label="Summary",
+                            children=[
+                                *params.get('summary_msg')
+                            ]),
+
+                    dcc.Tab(label="Investment data",
+                            children=[
+                                html.Div(f'You invested in {", ".join(params.get("chosen_stocks"))}'),
+                                params.get('your_investment_data')
+                            ]),
                     dcc.Tab(
                         label="Stock market data",
                         children=[

@@ -111,8 +111,10 @@ def volatility_yearly(data: pd.DataFrame) -> pd.DataFrame:
 
 
 @pytest.fixture
-def portfolios(data: pd.DataFrame) -> pd.DataFrame:
+def simulated_portfolios(data: pd.DataFrame) -> pd.DataFrame:
     num_simulations = 1_000
+    chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    params["chosen_stocks"] = chosen_stocks
     chosen_stocks = params.get("chosen_stocks")
     num_assets = len(chosen_stocks)
     returns_yearly = get_returns(data).returns_yearly
@@ -139,18 +141,35 @@ def portfolios(data: pd.DataFrame) -> pd.DataFrame:
         # print(counter, symbol)
         data_dic[stock_name + " weight"] = [w[counter] for w in weights]
 
-    portfolios = pd.DataFrame(data_dic)
-    return portfolios
+    simulated_portfolios = pd.DataFrame(data_dic)
+    simulated_portfolios = add_sharpe_ratio(simulated_portfolios)
+    return simulated_portfolios
 
 
 class TestPortfolioOptimization:
+
+    def test_get_sharp_ratio(self, simulated_portfolios:pd.DataFrame) ->None:
+        assert 'sharpe_ratio' in simulated_portfolios.columns
+
+    def test_get_portfolio_with(self, simulated_portfolios:pd.DataFrame) ->None:
+        portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=True)
+        assert portfolio.dtype.name == 'float64'
+        portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=True, pretty_print_perc=True)
+        assert portfolio.dtype.name == 'object'
+        with pytest.raises(NotImplementedError) as e:
+            get_portfolio_with(simulated_portfolios, lowest_volatility=False)
+        portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=False, highest_return=True)
+        assert portfolio.dtype.name == 'float64'
+        portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=True, highest_return=True)
+        assert portfolio.dtype.name == 'float64'
+
     def test_run_simulation(self, data):
         num_simulations = 1_000
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         params["chosen_stocks"] = chosen_stocks
         chosen_stocks = params.get("chosen_stocks")
         portfolios = run_portfolios_simulations(data, num_simulations, params)
-        assert portfolios.shape == (num_simulations, len(chosen_stocks) + 2)
+        assert portfolios.shape == (num_simulations, len(chosen_stocks) + 3)
 
     def test_get_volatility(self, data: pd.DataFrame) -> None:
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
