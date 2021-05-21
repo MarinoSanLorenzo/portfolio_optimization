@@ -3,6 +3,7 @@ import pandas as pd
 from collections import namedtuple
 from tqdm import tqdm
 import dash_html_components as html
+import datetime
 
 from src.utils import *
 
@@ -20,13 +21,57 @@ __all__ = [
     'run_portfolios_simulations',
     'get_portfolio_with',
     'get_investment_summary',
-    'add_sharpe_ratio'
+    'add_sharpe_ratio',
+    'get_simulated_stock',
+    'get_simulated_stocks',
+    'weight_simulated_stocks',
+    'Scenarios'
 ]
+
+Scenarios = namedtuple('Scenarios', 'simulated_stocks weighted_sim_stocks')
 
 PortfolioReturnsProperties = namedtuple(
     'PortfolioReturnsProperties',
     'variance_portfolio_return share_allocation_df ' 'expected_portfolio_return',
 )
+
+def get_scenarios(data:pd.DataFrame, nb_simulations:int, optimal_portfolio:dict,params:dict) -> Scenarios:
+    simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
+
+    weighted_sim_stocks = weight_simulated_stocks(simulated_stocks, optimal_portfolio)
+    return Scenarios(simulated_stocks, weighted_sim_stocks)
+
+
+def weight_simulated_stocks(simulated_stocks: dict, optimal_portfolio:dict) -> None:
+    weighted_sim_stocks = {}
+    for stock_name, simulated_stock in simulated_stocks.items():
+        for optimal_stock_weight_name, optimal_weight in optimal_portfolio.items():
+            if stock_name in optimal_stock_weight_name:
+                weighted_sim_stocks[stock_name] = simulated_stock * optimal_weight
+    return weighted_sim_stocks
+
+
+def get_simulated_stocks( data:pd.DataFrame, nb_simulations:int, params:dict) ->dict:
+    return {stock_name:get_simulated_stock(stock_name, data, nb_simulations) for stock_name in params.get(
+        'chosen_stocks')}
+
+def get_data_range(stock_data:pd.DataFrame) -> pd.DatetimeIndex:
+    last_observed_date = stock_data.index[-1]
+    first_simulated_day = last_observed_date + datetime.timedelta(days=1)
+    return pd.date_range(start=first_simulated_day, end=first_simulated_day + datetime.timedelta(days=365),
+                               freq='B')  # business days
+
+
+def get_simulated_stock(stock_name:str, data:pd.DataFrame, nb_simulations:int) -> np.array:
+    stock_data = data.query(f'stock_name=="{stock_name}"')
+    last_observed_value = stock_data['Adj Close'][stock_data.last_valid_index()]
+    data_range = get_data_range(stock_data)
+    mean_returns = stock_data.returns.mean()
+    std_returns = stock_data.returns.std()
+    brownian_motion = np.random.normal(mean_returns, std_returns, (len(data_range), nb_simulations))
+    brownian_motion_cum = brownian_motion.cumsum(axis=1)
+    return last_observed_value * brownian_motion_cum
+
 
 def add_sharpe_ratio(portfolios_simulated:pd.DataFrame) -> pd.DataFrame:
     rf = 0.01  # risk factor

@@ -27,7 +27,7 @@ def main():
 
 
 
-    num_simulations = 1_000_000
+    num_simulations = 100_000
 
     params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
