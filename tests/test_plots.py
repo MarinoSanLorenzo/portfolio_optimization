@@ -96,6 +96,32 @@ def scatter_plot(data: pd.DataFrame) -> None:
 
 
 class TestPlot:
+
+    def test_efficient_frontier_optimal_point_plot(self, portfolios_simulated: pd.DataFrame) -> None:
+        max_ratio_idx = portfolios_simulated.sharpe_ratio.idxmax()
+        portfolios_simulated['optimal'] = 'No'
+        portfolios_simulated.loc[max_ratio_idx, 'optimal'] = 'Yes'
+        fig = px.scatter(
+            portfolios_simulated,
+            x="volatility",
+            y="returns",
+            color='optimal',
+            title="Efficient Frontier - Optimal Point",
+        )
+        fig.show()
+
+    def test_efficient_frontier_continuous_color_plot(self, portfolios_simulated: pd.DataFrame) -> None:
+
+        fig = px.scatter(
+            portfolios_simulated,
+            x="volatility",
+            y="returns",
+            color='sharpe_ratio',
+            title="Efficient Frontier - Sharpe Ratio shaded",
+            color_continuous_scale=px.colors.diverging.RdYlGn
+        )
+        fig.show()
+
     def test_efficient_frontier_plot(self, portfolios_simulated: pd.DataFrame) -> None:
         fig = px.scatter(
             portfolios_simulated,

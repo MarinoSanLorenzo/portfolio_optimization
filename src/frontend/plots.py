@@ -10,8 +10,33 @@ __all__ = [
     "plot_scatter_matrix",
     "plot_dist_returns",
     "plot_efficient_frontier",
+    "plot_efficient_frontier_continuous_color",
+    "plot_efficient_frontier_optimal_point"
+
 ]
 
+def plot_efficient_frontier_continuous_color(portfolios_simulated: pd.DataFrame) -> None:
+    return px.scatter(
+        portfolios_simulated,
+        x="volatility",
+        y="returns",
+        color='sharpe_ratio',
+        title="Efficient Frontier - Sharpe Ratio shaded",
+        color_continuous_scale=px.colors.diverging.RdYlGn[::-1]
+    )
+
+
+def plot_efficient_frontier_optimal_point(portfolios_simulated: pd.DataFrame) -> None:
+    max_ratio_idx = portfolios_simulated.sharpe_ratio.idxmax()
+    portfolios_simulated['optimal'] = 'No'
+    portfolios_simulated.loc[max_ratio_idx, 'optimal'] = 'Yes'
+    return px.scatter(
+        portfolios_simulated,
+        x="volatility",
+        y="returns",
+        color='optimal',
+        title="Efficient Frontier - Optimal Point",
+    )
 
 def plot_efficient_frontier(
     portfolios_simulated: pd.DataFrame,

@@ -44,7 +44,6 @@ def get_portfolio_with(portfolios_simulated:pd.DataFrame,
     elif highest_return and not(lowest_volatility):
         portfolio = portfolios_simulated.iloc[portfolios_simulated['returns'].idxmax()]
     elif highest_return and lowest_volatility:
-        rf=0.01
         portfolio = portfolios_simulated.iloc[portfolios_simulated['sharpe_ratio'].idxmax()]
     else:
         raise NotImplementedError

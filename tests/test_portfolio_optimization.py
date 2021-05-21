@@ -148,6 +148,9 @@ def simulated_portfolios(data: pd.DataFrame) -> pd.DataFrame:
 
 class TestPortfolioOptimization:
 
+    def test_get_scenarios(self,simulated_portfolios:pd.DataFrame):
+        investment_amount = 1
+        portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=)
     def test_get_sharp_ratio(self, simulated_portfolios:pd.DataFrame) ->None:
         assert 'sharpe_ratio' in simulated_portfolios.columns
 

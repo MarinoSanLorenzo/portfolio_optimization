@@ -27,7 +27,7 @@ def main():
 
 
 
-    num_simulations = 100
+    num_simulations = 1_000_000
 
     params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
@@ -87,7 +87,9 @@ def main():
     )
     params["portfolio_info_dt"] = get_data_table(portfolio_info, pretty_print_perc=True)
     params["dist_returns_plot"] = plot_dist_returns(data, params)
-    params["efficient_frontier_plot"] = plot_efficient_frontier(portfolios_simulated)
+    params["efficient_frontier_optimal_point_plot"] = plot_efficient_frontier_optimal_point(portfolios_simulated)
+    params["efficient_frontier_continuous_color_plot"] = plot_efficient_frontier_continuous_color(portfolios_simulated)
+
 
     params["portfolios_simulated_dt"] = get_data_table(
         portfolios_simulated, pretty_print_perc=True
