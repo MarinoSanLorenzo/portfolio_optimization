@@ -30,7 +30,8 @@ __all__ = [
     'get_df_simulated_stock',
     'get_scenarios_portfolio',
     'Scenarios',
-    'get_best_and_worst_scenarios'
+    'get_best_and_worst_scenarios',
+    'get_data_range'
 ]
 
 Simulations = namedtuple('Simulations', 'simulated_stocks weighted_sim_stocks scenario')
@@ -63,9 +64,8 @@ def get_scenarios_portfolio( weighted_sim_stocks:dict) -> np.array:
     return np.sum(list(weighted_sim_stocks.values()), axis=0)
 
 
-def get_df_simulated_stock(stock_name:str, data: pd.DataFrame, simulated_stocks: dict) -> pd.DataFrame:
-    stock_data = data.query(f'stock_name=="{stock_name}"')
-    data_range = get_data_range(stock_data)
+def get_df_simulated_stock(stock_name:str, simulated_stocks: dict, params:dict) -> pd.DataFrame:
+    data_range = params.get('data_range')
     simulated_stock = simulated_stocks.get(stock_name)
     df = pd.DataFrame(simulated_stock, index=data_range, columns=[f'sim_{i}_{stock_name}' for i in range(
         simulated_stock.shape[1])])
@@ -97,17 +97,19 @@ def get_simulated_stocks( data:pd.DataFrame, nb_simulations:int, params:dict) ->
     return {stock_name:get_simulated_stock(stock_name, data, nb_simulations) for stock_name in params.get(
         'chosen_stocks')}
 
-def get_data_range(stock_data:pd.DataFrame) -> pd.DatetimeIndex:
+def get_data_range(data:pd.DataFrame, params:dict) -> pd.DatetimeIndex:
+    stock_name = list(params.get('chosen_stocks').keys())[0]
+    stock_data = data.query(f'stock_name=="{stock_name}"')
     last_observed_date = stock_data.index[-1]
     first_simulated_day = last_observed_date + datetime.timedelta(days=1)
     return pd.date_range(start=first_simulated_day, end=first_simulated_day + datetime.timedelta(days=365),
                                freq='B')  # business days
 
 
-def get_simulated_stock(stock_name:str, data:pd.DataFrame, nb_simulations:int) -> np.array:
+def get_simulated_stock(stock_name:str, data:pd.DataFrame, nb_simulations:int, params:dict) -> np.array:
     stock_data = data.query(f'stock_name=="{stock_name}"')
     last_observed_value = stock_data['Adj Close'][stock_data.last_valid_index()]
-    data_range = get_data_range(stock_data)
+    data_range = get_data_range(stock_data, params)
     mean_returns = stock_data.returns.mean()
     std_returns = stock_data.returns.std()
     brownian_motion = np.random.normal(mean_returns, std_returns, (len(data_range), nb_simulations))

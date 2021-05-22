@@ -72,6 +72,7 @@ def main():
     ###########################################################
 
     params["data"] = data
+    params['data_range'] = get_data_range(data, params)
     params['your_investment_data'] = get_data_table(your_investment_data)
     params["open_prices_plot_all"] = plot(data, "Open", "Open prices")
     params["open_prices_plot_lst"] = add_layout_components_for_multiple_plots(

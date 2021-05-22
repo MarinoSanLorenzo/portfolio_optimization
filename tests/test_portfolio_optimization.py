@@ -227,9 +227,6 @@ class TestPortfolioOptimization:
         assert scenarios.worst < scenarios.best
 
 
-    def test_get_scenarios_portfolio_df(self, ):
-        pass
-
     def test_get_scenarios_portfolio(self, weighted_sim_stocks:dict) -> None:
         stock_name = 'Nestlé'
         stock_shape = weighted_sim_stocks.get(stock_name).shape
@@ -241,7 +238,8 @@ class TestPortfolioOptimization:
 
     def test_get_df_simulated_stocks(self, data:pd.DataFrame, simulated_stocks:dict) -> pd.DataFrame:
         stock_name = 'Nestlé'
-        df_simulated_stock = get_df_simulated_stock(stock_name, data, simulated_stocks)
+        params['data_range'] = get_data_range(data, params)
+        df_simulated_stock = get_df_simulated_stock(stock_name, simulated_stocks, params)
         for col in ['Date', 'simulation_name', 'Adj Close Price simulated']:
             assert col in df_simulated_stock.columns
 
@@ -258,6 +256,7 @@ class TestPortfolioOptimization:
         nb_simulations = 100
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         params["chosen_stocks"] = chosen_stocks
+        params['data_range'] = get_data_range(data, params)
         simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
         assert isinstance(simulated_stocks, dict)
         assert len(simulated_stocks) == len(params.get('chosen_stocks'))
@@ -265,7 +264,8 @@ class TestPortfolioOptimization:
     def test_get_simulated_stock(self, data:pd.DataFrame)  -> None:
         stock_name = 'Nestlé'
         nb_simulations = 100
-        simulated_stock = get_simulated_stock(stock_name, data, nb_simulations)
+        params['data_range'] = get_data_range(data, params)
+        simulated_stock = get_simulated_stock(stock_name, data, nb_simulations, params)
         assert type(simulated_stock).__name__ == 'ndarray'
         assert simulated_stock.shape[1] == nb_simulations
 
