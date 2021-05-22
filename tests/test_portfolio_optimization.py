@@ -198,7 +198,46 @@ def df_simulated_stock(data:pd.DataFrame, simulated_stocks:dict) -> pd.DataFrame
         df.columns = ['Date', 'simulation_name', 'Adj Close Price simulated']
         return df
 
+@pytest.fixture
+def scenarios_portfolio( weighted_sim_stocks:dict) -> np.array:
+    scenarios_portfolio = np.sum(list(weighted_sim_stocks.values()), axis=0)
+    return scenarios_portfolio
+
+@pytest.fixture
+def best_and_worst_scenarios(scenarios_portfolio:np.array) -> Scenarios:
+    last_sim_portfolio_prices = scenarios_portfolio[-1, :]
+    first_value = scenarios_portfolio[0, :].mean()
+    lower_quantile_lvl = 0.05
+    upper_quantile_lvl = 0.95
+    worst_scenario = np.quantile(last_sim_portfolio_prices, q=lower_quantile_lvl)
+    best_scenario = np.quantile(last_sim_portfolio_prices, q=upper_quantile_lvl)
+    worst_yearly_return = (worst_scenario - first_value) / first_value
+    best_yearly_return = (best_scenario - first_value) / first_value
+    worst_yearly_return_str = '{:.2%}'.format(worst_yearly_return)
+    best_yearly_return_str = '{:.2%}'.format(best_yearly_return)
+    best_and_worst_scenario = Scenarios(worst_yearly_return, best_yearly_return, worst_yearly_return_str,
+                                best_yearly_return_str)
+    return best_and_worst_scenario
+
 class TestPortfolioOptimization:
+
+    def test_get_best_and_worst_scenarios(self, scenarios_portfolio:np.array) -> None:
+        scenarios = get_best_and_worst_scenarios(scenarios_portfolio)
+        assert isinstance(scenarios, Scenarios), f'{type(best_and_worst_scenarios)}'
+        assert scenarios.worst < scenarios.best
+
+
+    def test_get_scenarios_portfolio_df(self, ):
+        pass
+
+    def test_get_scenarios_portfolio(self, weighted_sim_stocks:dict) -> None:
+        stock_name = 'Nestlé'
+        stock_shape = weighted_sim_stocks.get(stock_name).shape
+
+        scenarios_portfolio = get_scenarios_portfolio(weighted_sim_stocks)
+
+        assert type(scenarios_portfolio).__name__ == 'ndarray'
+        assert scenarios_portfolio.shape == stock_shape
 
     def test_get_df_simulated_stocks(self, data:pd.DataFrame, simulated_stocks:dict) -> pd.DataFrame:
         stock_name = 'Nestlé'

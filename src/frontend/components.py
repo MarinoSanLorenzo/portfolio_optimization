@@ -22,6 +22,7 @@ def get_data_table(
     if pretty_print_perc:
         df = pretty_print_percentage(df)
     return dash_table.DataTable(
+
         columns=[{"name": i, "id": i} for i in df.columns], data=df.to_dict("records")
     )
 

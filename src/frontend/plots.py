@@ -45,7 +45,9 @@ def plot_efficient_frontier_continuous_color(portfolios_simulated: pd.DataFrame)
         y="returns",
         color='sharpe_ratio',
         title="Efficient Frontier - Sharpe Ratio shaded",
-        color_continuous_scale=px.colors.diverging.RdYlGn[::-1]
+        color_continuous_scale=px.colors.diverging.RdYlGn
+
+        # color_continuous_scale=px.colors.diverging.RdYlGn[::-1]
     )
 
 
