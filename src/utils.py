@@ -11,15 +11,17 @@ __all__ = [
     "pretty_print_percentage",
     "get_return",
     "get_stock_data_returns",
-    'get_investment_data'
+    "get_investment_data",
 ]
 
-def get_investment_data(params:dict, Stock:Stock=Stock) -> pd.DataFrame:
+
+def get_investment_data(params: dict, Stock: Stock = Stock) -> pd.DataFrame:
     d = defaultdict(list)
     for field in Stock._fields:
-        for stock_name, stock_obj in params.get('STOCKS_INFO').items():
+        for stock_name, stock_obj in params.get("STOCKS_INFO").items():
             d[field].append(getattr(stock_obj, field))
     return pd.DataFrame.from_dict(d)
+
 
 def get_stock_data_returns(data: pd.DataFrame, params: dict) -> pd.DataFrame:
     return pd.concat([get_return(data, stock) for stock in params.get("STOCKS_INFO")])

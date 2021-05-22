@@ -26,9 +26,8 @@ def main():
     # stock_name = input(f'Insert your stock!')
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
 
-
-
     num_simulations = 10_000
+    num_simulations_stock = 100
 
     params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
@@ -63,8 +62,16 @@ def main():
     )
 
     summary_msg = get_investment_summary(portfolios_simulated)
-    num_simulations_stock = 100
-    simulated_stocks = get_simulated_stocks(data_step2, num_simulations_stock, params)
+
+    optimal_portfolio = get_portfolio_with(
+        portfolios_simulated,
+        lowest_volatility=True,
+        highest_return=True,
+        pretty_print_perc=False,
+    )
+
+    params["data_range"] = get_data_range(data_step2, params)
+    sim = get_simulations(data_step2, num_simulations_stock, optimal_portfolio, params)
 
     data = data_step2
 
@@ -73,8 +80,8 @@ def main():
     ###########################################################
 
     params["data"] = data
-    params['data_range'] = get_data_range(data, params)
-    params['your_investment_data'] = get_data_table(your_investment_data)
+    params["data_range"] = get_data_range(data, params)
+    params["your_investment_data"] = get_data_table(your_investment_data)
     params["open_prices_plot_all"] = plot(data, "Open", "Open prices")
     params["open_prices_plot_lst"] = add_layout_components_for_multiple_plots(
         plot_low_high_prices, data, params
@@ -92,17 +99,25 @@ def main():
     )
     params["portfolio_info_dt"] = get_data_table(portfolio_info, pretty_print_perc=True)
     params["dist_returns_plot"] = plot_dist_returns(data, params)
-    params["efficient_frontier_optimal_point_plot"] = plot_efficient_frontier_optimal_point(portfolios_simulated)
-    params["efficient_frontier_continuous_color_plot"] = plot_efficient_frontier_continuous_color(portfolios_simulated)
-
+    params[
+        "efficient_frontier_optimal_point_plot"
+    ] = plot_efficient_frontier_optimal_point(portfolios_simulated)
+    params[
+        "efficient_frontier_continuous_color_plot"
+    ] = plot_efficient_frontier_continuous_color(portfolios_simulated)
 
     params["portfolios_simulated_dt"] = get_data_table(
         portfolios_simulated, pretty_print_perc=True
     )
-    params['summary_msg'] = summary_msg
-    params["simulated_stock_plots_lst"] = add_layout_compoment_for_simulated_stock_plots(data, simulated_stocks)
-    params['']
-
+    params["summary_msg"] = summary_msg
+    params[
+        "simulated_stock_plots_lst"
+    ] = add_layout_compoment_for_simulated_stock_plots(data, sim.simulated_stocks)
+    params["simulations_optimal_portfolio_plot"] = plot_simulated_stocks(
+        sim.simulations_optimal_portfolio_df,
+        y="Adj Close Price simulated",
+        title="Optimal Portfolio simulations",
+    )
 
     app.layout = get_layout(params)
     app.run_server(debug=True)

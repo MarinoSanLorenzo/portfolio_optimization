@@ -79,18 +79,17 @@ def data() -> pd.DataFrame:
     data = data_step2
     return data
 
+
 def investment_data() -> pd.DataFrame:
     d = defaultdict(list)
     for field in Stock._fields:
-        for stock_name, stock_obj in params.get('STOCKS_INFO').items():
+        for stock_name, stock_obj in params.get("STOCKS_INFO").items():
             d[field].append(getattr(stock_obj, field))
     df = pd.DataFrame.from_dict(d)
     return df
 
 
-
 class TestUtils:
-
     def test_get_investment_data(self) -> None:
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         investment_data = get_investment_data(params)
@@ -98,10 +97,6 @@ class TestUtils:
             assert field in investment_data.columns
 
         assert investment_data.shape == (len(chosen_stocks), len(Stock._fields))
-
-
-
-
 
     def test_get_stock_returns(self, data: pd.DataFrame) -> None:
         data = get_stock_data_returns(data, params)

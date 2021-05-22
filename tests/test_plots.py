@@ -96,39 +96,68 @@ def scatter_plot(data: pd.DataFrame) -> None:
 
 
 class TestPlot:
+    def test_simulated_optimal_portfolio(
+        self, data: pd.DataFrame, portfolios_simulated: pd.DataFrame
+    ) -> None:
+        num_simulations_stock = 100
+        chosen_stocks = list(params.get("STOCKS_INFO").keys())
+        params["chosen_stocks"] = chosen_stocks
+        params["data_range"] = get_data_range(data, params)
+        optimal_portfolio = get_portfolio_with(
+            portfolios_simulated,
+            lowest_volatility=True,
+            highest_return=True,
+            pretty_print_perc=False,
+        )
 
-    def test_simulated_stocks_plot(self, data:pd.DataFrame) -> None:
+        sim = get_simulations(data, num_simulations_stock, optimal_portfolio, params)
+        fig = plot_simulated_stocks(
+            sim.simulations_optimal_portfolio_df,
+            y="Adj Close Price simulated",
+            title="Optimal Portfolio simulations",
+        )
+        fig.show()
+
+    def test_simulated_stocks_plot(self, data: pd.DataFrame) -> None:
         nb_simulations = 100
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         params["chosen_stocks"] = chosen_stocks
         simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
-        stock_name = 'Nestlé'
-        df_simulated_stock = get_df_simulated_stock(stock_name, data, simulated_stocks)
-        fig = plot_simulated_stocks(df_simulated_stock, "Adj Close Price simulated", "Simulated Stock Prices")
+        stock_name = "Nestlé"
+        df_simulated_stock = get_df_simulated_stock(
+            stock_name, simulated_stocks, params
+        )
+        fig = plot_simulated_stocks(
+            df_simulated_stock, "Adj Close Price simulated", "Simulated Stock Prices"
+        )
         fig.show()
 
-    def test_efficient_frontier_optimal_point_plot(self, portfolios_simulated: pd.DataFrame) -> None:
+    def test_efficient_frontier_optimal_point_plot(
+        self, portfolios_simulated: pd.DataFrame
+    ) -> None:
         max_ratio_idx = portfolios_simulated.sharpe_ratio.idxmax()
-        portfolios_simulated['optimal'] = 'No'
-        portfolios_simulated.loc[max_ratio_idx, 'optimal'] = 'Yes'
+        portfolios_simulated["optimal"] = "No"
+        portfolios_simulated.loc[max_ratio_idx, "optimal"] = "Yes"
         fig = px.scatter(
             portfolios_simulated,
             x="volatility",
             y="returns",
-            color='optimal',
+            color="optimal",
             title="Efficient Frontier - Optimal Point",
         )
         fig.show()
 
-    def test_efficient_frontier_continuous_color_plot(self, portfolios_simulated: pd.DataFrame) -> None:
+    def test_efficient_frontier_continuous_color_plot(
+        self, portfolios_simulated: pd.DataFrame
+    ) -> None:
 
         fig = px.scatter(
             portfolios_simulated,
             x="volatility",
             y="returns",
-            color='sharpe_ratio',
+            color="sharpe_ratio",
             title="Efficient Frontier - Sharpe Ratio shaded",
-            color_continuous_scale=px.colors.diverging.RdYlGn
+            color_continuous_scale=px.colors.diverging.RdYlGn,
         )
         fig.show()
 
