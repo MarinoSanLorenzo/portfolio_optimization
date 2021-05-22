@@ -27,15 +27,40 @@ __all__ = [
     'weight_simulated_stocks',
     'Scenarios',
     'get_data_range',
-    'get_df_simulated_stock'
+    'get_df_simulated_stock',
+    'get_scenarios_portfolio',
+    'Scenarios',
+    'get_best_and_worst_scenarios'
 ]
 
-Scenarios = namedtuple('Scenarios', 'simulated_stocks weighted_sim_stocks')
+Simulations = namedtuple('Simulations', 'simulated_stocks weighted_sim_stocks scenario')
 
 PortfolioReturnsProperties = namedtuple(
     'PortfolioReturnsProperties',
     'variance_portfolio_return share_allocation_df ' 'expected_portfolio_return',
 )
+
+Scenarios = namedtuple('Scenarios', 'worst best worst_str '
+                                                            'best_str')
+
+def get_best_and_worst_scenarios(scenarios_portfolio:np.array, lower_quantile_lvl:float = 0.05,
+                                 upper_quantile_lvl:float = 0.95) -> Scenarios:
+    last_sim_portfolio_prices = scenarios_portfolio[-1, :]
+    first_value = scenarios_portfolio[0, :].mean()
+    worst_scenario = np.quantile(last_sim_portfolio_prices, q=lower_quantile_lvl)
+    best_scenario = np.quantile(last_sim_portfolio_prices, q=upper_quantile_lvl)
+    worst_yearly_return = (worst_scenario - first_value) / first_value
+    best_yearly_return = (best_scenario - first_value) / first_value
+    worst_yearly_return_str = '{:.2%}'.format(worst_yearly_return)
+    best_yearly_return_str = '{:.2%}'.format(best_yearly_return)
+    return Scenarios(worst_yearly_return, best_yearly_return, worst_yearly_return_str, best_yearly_return_str)
+
+def get_scenarios_portfolio_df() -> pd.DataFrame:
+    pass
+
+
+def get_scenarios_portfolio( weighted_sim_stocks:dict) -> np.array:
+    return np.sum(list(weighted_sim_stocks.values()), axis=0)
 
 
 def get_df_simulated_stock(stock_name:str, data: pd.DataFrame, simulated_stocks: dict) -> pd.DataFrame:
@@ -50,14 +75,16 @@ def get_df_simulated_stock(stock_name:str, data: pd.DataFrame, simulated_stocks:
     df.columns = ['Date', 'simulation_name', 'Adj Close Price simulated']
     return df
 
-def get_scenarios(data:pd.DataFrame, nb_simulations:int, optimal_portfolio:dict,params:dict) -> Scenarios:
+def get_scenarios(data:pd.DataFrame, nb_simulations:int, optimal_portfolio:dict,params:dict) -> Simulations:
     simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
 
     weighted_sim_stocks = weight_simulated_stocks(simulated_stocks, optimal_portfolio)
-    return Scenarios(simulated_stocks, weighted_sim_stocks)
+    siimulations_optimal_portfolio = get_scenarios_portfolio(weighted_sim_stocks)
+    scenarios_optimal_portfolio = get_best_and_worst_scenarios(siimulations_optimal_portfolio)
+    return Simulations(simulated_stocks, weighted_sim_stocks, siimulations_optimal_portfolio, scenarios_optimal_portfolio)
 
 
-def weight_simulated_stocks(simulated_stocks: dict, optimal_portfolio:dict) -> None:
+def weight_simulated_stocks(simulated_stocks: dict, optimal_portfolio:dict) -> dict:
     weighted_sim_stocks = {}
     for stock_name, simulated_stock in simulated_stocks.items():
         for optimal_stock_weight_name, optimal_weight in optimal_portfolio.items():

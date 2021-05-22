@@ -23,11 +23,12 @@ def main():
     ###########################################################
 
     # inputs
+    # stock_name = input(f'Insert your stock!')
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
 
 
 
-    num_simulations = 100_000
+    num_simulations = 10_000
 
     params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
@@ -62,7 +63,7 @@ def main():
     )
 
     summary_msg = get_investment_summary(portfolios_simulated)
-    num_simulations_stock = 1_000
+    num_simulations_stock = 100
     simulated_stocks = get_simulated_stocks(data_step2, num_simulations_stock, params)
     data = data_step2
 
