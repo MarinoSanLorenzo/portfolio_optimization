@@ -20,7 +20,7 @@ stocks_info = {
     # 'Sika':Stock('Sika','SIKA', 'Chemicals', '11'),
     # 'Swiss Re AG':Stock('Swiss Re AG','SREN.SW', 'Insurance', '12'),
     # 'Crédit suisse':Stock('Crédit suisse','CS', 'Banking', '13'),
-    "SMI PR": Stock("SMI PR", "^SSMI", "Index", "14"),
+    # "SMI PR": Stock("SMI PR", "^SSMI", "Index", "14"),
 }
 
 code_name_mapping = {v.code: v.name for v in stocks_info.values()}
@@ -31,4 +31,7 @@ params = {
     "CODE_NAME_MAPPING": code_name_mapping,
     "CODE_RANK_MAPPING": code_rank_mapping,
     "STYLE_SHEET": ["https://codepen.io/chriddyp/pen/bWLwgP.css"],
+    'APP_NAME':'Smart Invest',
+    "START_DATE" : datetime.datetime(2019, 1, 1),
+    "END_DATE" : datetime.date.today(),
 }

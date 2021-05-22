@@ -10,7 +10,7 @@ __all__ = ["get_layout"]
 def get_layout(params: dict) -> html.Div:
     return html.Div(
         children=[
-            html.H1(children="Smart Invest"),
+            html.H1(children=params.get('APP_NAME')),
             html.H2(children="The best trading tool for young swiss individuals!"),
             dcc.Tabs(
                 [
@@ -77,8 +77,8 @@ def get_layout(params: dict) -> html.Div:
                         label="Simulated Portfolios",
                         children=[
                             html.Div(
-                                "Find below the results of the portfolios Smart Invest simulated for the "
-                                "sake of your wealth!"
+                                f'Find below the results of the portfolios {params.get("APP_NAME")} simulated for the '
+                                f'sake of your wealth!'
                             ),
                             params.get("portfolios_simulated_dt"),
                         ],

@@ -2,7 +2,7 @@ import pandas as pd
 from pandas_datareader import data as web
 from collections import defaultdict
 from src.constants import Stock
-
+import datetime
 __all__ = [
     "get_data",
     "process_data",
@@ -12,7 +12,110 @@ __all__ = [
     "get_return",
     "get_stock_data_returns",
     "get_investment_data",
+    'get_user_inputs',
+    'get_user_inputs'
 ]
+def get_stock_input(params:dict) -> list:
+    stock_info = params.get("STOCKS_INFO")
+
+    print(f'Dear User, here is the list of stocks {params.get("APP_NAME")} chose by default for you!')
+
+    for stock in stock_info.values():
+        print(stock)
+
+    chosen_stocks = list(stock_info.keys())
+    reset_chosen_stock_lst = True
+    done=False
+    while not done:
+        answer = input('Would you like to proceed with this set of stocks?[Y/N]')
+
+        if answer in ['Y', 'y'] and chosen_stocks:
+            done = True
+        else:
+            if reset_chosen_stock_lst:
+                chosen_stocks = []
+                reset_chosen_stock_lst = False
+            mapping = {stock_obj.market_rank:stock for stock, stock_obj in stock_info.items()}
+            answer = input(f'Please enter the market_rank of the stock')
+            if answer in set(mapping.keys()):
+                chosen_stock = mapping[answer]
+                chosen_stocks.append(chosen_stock)
+            else:
+                print(f'The answer {answer} does not correspond to any market_rank from {params.get("APP_NAME")} database!')
+            print(f'Currently you have selected: {", ".join(list(set(chosen_stocks)))}')
+    else:
+        print(f'You have selected: {", ".join(list(set(chosen_stocks)))}')
+
+    return list(set(chosen_stocks))
+
+def get_numerical_input(variable:str, type_:str='int') -> int:
+    done = False
+    while not done:
+        try:
+            answer = input(f'Enter the {variable}:')
+            answer = int(answer) if type_ == 'int' else float(answer)
+            done=True
+        except ValueError:
+            print(f'{answer} is not an {type_} value, try again!')
+            done=False
+    else:
+        print(f'The {variable} you selected is:\n {answer}')
+    return answer
+
+def get_date_input(var_:str,params:dict)-> datetime.datetime:
+    done=False
+    while not done:
+        answer = input('Would you like to change it?[Y/N]')
+        if answer in ['Y','y']:
+           year = get_numerical_input('Year')
+           month = get_numerical_input('Month')
+           day = get_numerical_input('Day')
+           answer = datetime.datetime(year, month, day)
+        else:
+            answer = params.get(var_)
+        final_answer= input(f'Do you confirm this date:{answer}?[Y/N]')
+        if final_answer in ['Y', 'y']:
+            done=True
+    else:
+        print(f'The {var_} you selected is:\n {answer}')
+    return answer
+
+
+def get_user_inputs(params:dict) -> dict:
+    answer = input('Default mode?[Y/N]')
+    if answer in ['Y','y']:
+        params['num_simulations'] = 10_000
+        params['num_simulations_stock'] = 100
+        params['investment_amount'] = 1_000
+        params['lower_quantile_lvl'] = 0.05
+        params['upper_quantile_lvl'] = 0.95
+
+        params["chosen_stocks"] = list(params.get("STOCKS_INFO").keys())
+
+        return params
+
+    chosen_stocks = get_stock_input(params)
+    num_simulations = get_numerical_input('number of simulations for the different portfolio allocation')
+    num_simulations_stock = get_numerical_input('number of simulations for the different stocks scenarios')
+    investment_amount = get_numerical_input('investment amount', type_='float')
+    lower_quantile_lvl = get_numerical_input('worst scenario quantile level', type_='float')
+    upper_quantile_lvl = get_numerical_input('best scenario quantile level', type_='float')
+    start_date = get_date_input('START_DATE', params)
+    end_date = get_date_input('END_DATE', params)
+
+
+
+    params['chosen_stocks'] = chosen_stocks
+    params['num_simulations'] = num_simulations
+    params['num_simulations_stock'] = num_simulations_stock
+    params['investment_amount'] = investment_amount
+    params['lower_quantile_lvl'] = lower_quantile_lvl
+    params['upper_quantile_lvl'] = upper_quantile_lvl
+
+    params["START_DATE"] = start_date
+    params["END_DATE"] =end_date
+
+    return params
 
 
 def get_investment_data(params: dict, Stock: Stock = Stock) -> pd.DataFrame:

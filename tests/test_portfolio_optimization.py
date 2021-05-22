@@ -177,7 +177,8 @@ def simulated_stocks(data: pd.DataFrame) -> dict:
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
     params["chosen_stocks"] = chosen_stocks
     params["data_range"] = get_data_range(data, params)
-    simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
+    params['num_simulations'] = nb_simulations
+    simulated_stocks = get_simulated_stocks(data, params)
     return simulated_stocks
 
 
@@ -252,6 +253,7 @@ def simulations(data: pd.DataFrame) -> Simulations:
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
     params["chosen_stocks"] = chosen_stocks
     params["data_range"] = get_data_range(data, params)
+    params['num_simulations_stock'] = nb_simulations
 
     optimal_portfolio = get_portfolio_with(
         simulated_portfolios,
@@ -260,7 +262,7 @@ def simulations(data: pd.DataFrame) -> Simulations:
         pretty_print_perc=False,
     ).to_dict()
 
-    simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
+    simulated_stocks = get_simulated_stocks(data, params)
 
     weighted_sim_stocks = weight_simulated_stocks(simulated_stocks, optimal_portfolio)
     simulations_optimal_portfolio = get_scenarios_portfolio(weighted_sim_stocks)
@@ -286,6 +288,9 @@ class TestPortfolioOptimization:
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         params["chosen_stocks"] = chosen_stocks
         params["data_range"] = get_data_range(data, params)
+        params['num_simulations_stock'] = 100
+        params['lower_quantile_lvl'] = 0.05
+        params['upper_quantile_lvl'] = 0.95
 
         optimal_portfolio = get_portfolio_with(
             simulated_portfolios,
@@ -293,7 +298,7 @@ class TestPortfolioOptimization:
             highest_return=True,
             pretty_print_perc=False,
         ).to_dict()
-        simulations = get_simulations(data, 100, optimal_portfolio, params)
+        simulations = get_simulations(data, optimal_portfolio, params)
         assert isinstance(simulations, Simulations)
         assert isinstance(simulations.simulated_stocks, dict)
         assert isinstance(simulations.weighted_sim_stocks, dict)
@@ -301,6 +306,7 @@ class TestPortfolioOptimization:
         assert isinstance(simulations.scenario, Scenarios)
 
     def test_get_best_and_worst_scenarios(self, scenarios_portfolio: np.array) -> None:
+
         scenarios = get_best_and_worst_scenarios(scenarios_portfolio)
         assert isinstance(scenarios, Scenarios), f"{type(best_and_worst_scenarios)}"
         assert scenarios.worst < scenarios.best
@@ -346,7 +352,8 @@ class TestPortfolioOptimization:
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         params["chosen_stocks"] = chosen_stocks
         params["data_range"] = get_data_range(data, params)
-        simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
+        params['num_simulations_stock'] = 100
+        simulated_stocks = get_simulated_stocks(data, params)
         assert isinstance(simulated_stocks, dict)
         assert len(simulated_stocks) == len(params.get("chosen_stocks"))
 
@@ -354,7 +361,8 @@ class TestPortfolioOptimization:
         stock_name = "Nestlé"
         nb_simulations = 100
         params["data_range"] = get_data_range(data, params)
-        simulated_stock = get_simulated_stock(stock_name, data, nb_simulations, params)
+        params['num_simulations_stock'] = 100
+        simulated_stock = get_simulated_stock(stock_name, data,  params)
         assert type(simulated_stock).__name__ == "ndarray"
         assert simulated_stock.shape[1] == nb_simulations
 
@@ -384,7 +392,8 @@ class TestPortfolioOptimization:
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         params["chosen_stocks"] = chosen_stocks
         chosen_stocks = params.get("chosen_stocks")
-        portfolios = run_portfolios_simulations(data, num_simulations, params)
+        params['num_simulations'] = num_simulations
+        portfolios = run_portfolios_simulations(data, params)
         assert portfolios.shape == (num_simulations, len(chosen_stocks) + 3)
 
     def test_get_volatility(self, data: pd.DataFrame) -> None:

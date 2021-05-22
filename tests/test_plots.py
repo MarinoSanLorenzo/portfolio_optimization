@@ -34,6 +34,7 @@ def data_step1() -> pd.DataFrame:
 def data() -> pd.DataFrame:
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
     num_simulations = 1_000
+    params['num_simulations'] = num_simulations
 
     params["chosen_stocks"] = chosen_stocks
     params["stocks_info"] = params.get("STOCKS_INFO")
@@ -62,7 +63,7 @@ def data() -> pd.DataFrame:
     data_step2 = get_stock_data_returns(data_step1, params)
 
     portfolios_simulated = run_portfolios_simulations(
-        data_step1, num_simulations, params
+        data_step1,  params
     )
 
     data = data_step2
@@ -72,8 +73,9 @@ def data() -> pd.DataFrame:
 @pytest.fixture
 def portfolios_simulated(data_step1: pd.DataFrame) -> pd.DataFrame:
     num_simulations = 1_000
+    params['num_simulations'] = num_simulations
     portfolios_simulated = run_portfolios_simulations(
-        data_step1, num_simulations, params
+        data_step1, params
     )
     return portfolios_simulated
 
@@ -99,10 +101,13 @@ class TestPlot:
     def test_simulated_optimal_portfolio(
         self, data: pd.DataFrame, portfolios_simulated: pd.DataFrame
     ) -> None:
-        num_simulations_stock = 100
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         params["chosen_stocks"] = chosen_stocks
         params["data_range"] = get_data_range(data, params)
+        params['num_simulations_stock'] = 100
+        params['lower_quantile_lvl'] = 0.05
+        params['upper_quantile_lvl'] = 0.95
+
         optimal_portfolio = get_portfolio_with(
             portfolios_simulated,
             lowest_volatility=True,
@@ -110,7 +115,7 @@ class TestPlot:
             pretty_print_perc=False,
         )
 
-        sim = get_simulations(data, num_simulations_stock, optimal_portfolio, params)
+        sim = get_simulations(data, optimal_portfolio, params)
         fig = plot_simulated_stocks(
             sim.simulations_optimal_portfolio_df,
             y="Adj Close Price simulated",
@@ -119,10 +124,10 @@ class TestPlot:
         fig.show()
 
     def test_simulated_stocks_plot(self, data: pd.DataFrame) -> None:
-        nb_simulations = 100
+        params['num_simulations_stock'] = 100
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         params["chosen_stocks"] = chosen_stocks
-        simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
+        simulated_stocks = get_simulated_stocks(data,  params)
         stock_name = "Nestlé"
         df_simulated_stock = get_df_simulated_stock(
             stock_name, simulated_stocks, params
