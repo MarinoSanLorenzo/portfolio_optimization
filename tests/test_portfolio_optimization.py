@@ -146,37 +146,50 @@ def simulated_portfolios(data: pd.DataFrame) -> pd.DataFrame:
     simulated_portfolios = add_sharpe_ratio(simulated_portfolios)
     return simulated_portfolios
 
+
 @pytest.fixture
 def simulated_stock(data) -> np.array:
-    stock_name = 'Nestlé'
+    stock_name = "Nestlé"
     stock_data = data.query(f'stock_name=="{stock_name}"')
-    last_observed_value = stock_data['Adj Close'][stock_data.last_valid_index()]
+    last_observed_value = stock_data["Adj Close"][stock_data.last_valid_index()]
     last_observed_date = stock_data.index[-1]
     first_simulated_day = last_observed_date + datetime.timedelta(days=1)
-    data_range = pd.date_range(start=first_simulated_day, end=first_simulated_day + datetime.timedelta(days=365),
-                               freq='B')  # business days
+    data_range = pd.date_range(
+        start=first_simulated_day,
+        end=first_simulated_day + datetime.timedelta(days=365),
+        freq="B",
+    )  # business days
     nb_simulations = 100
     mean_returns = stock_data.returns.mean()
     std_returns = stock_data.returns.std()
-    brownian_motion = np.random.normal(mean_returns, std_returns, (len(data_range), nb_simulations))
-    simulated_returns = brownian_motion +1
+    brownian_motion = np.random.normal(
+        mean_returns, std_returns, (len(data_range), nb_simulations)
+    )
+    simulated_returns = brownian_motion + 1
     simulated_returns_cum = simulated_returns.cumprod(axis=1)
     simulated_value_stocks = last_observed_value * simulated_returns_cum
     return simulated_value_stocks
 
+
 @pytest.fixture
-def simulated_stocks(data:pd.DataFrame) -> dict:
+def simulated_stocks(data: pd.DataFrame) -> dict:
     nb_simulations = 100
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
     params["chosen_stocks"] = chosen_stocks
+    params["data_range"] = get_data_range(data, params)
     simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
     return simulated_stocks
 
+
 @pytest.fixture
-def weighted_sim_stocks(simulated_stocks: dict, simulated_portfolios: pd.DataFrame) -> dict:
+def weighted_sim_stocks(
+    simulated_stocks: dict, simulated_portfolios: pd.DataFrame
+) -> dict:
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
     params["chosen_stocks"] = chosen_stocks
-    optimal_portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=True, highest_return=True).to_dict()
+    optimal_portfolio = get_portfolio_with(
+        simulated_portfolios, lowest_volatility=True, highest_return=True
+    ).to_dict()
     weighted_sim_stocks = {}
     for stock_name, simulated_stock in simulated_stocks.items():
         for optimal_stock_weight_name, optimal_weight in optimal_portfolio.items():
@@ -184,27 +197,36 @@ def weighted_sim_stocks(simulated_stocks: dict, simulated_portfolios: pd.DataFra
                 weighted_sim_stocks[stock_name] = simulated_stock * optimal_weight
     return weighted_sim_stocks
 
-@pytest.fixture
-def df_simulated_stock(data:pd.DataFrame, simulated_stocks:dict) -> pd.DataFrame:
-        stock_name = 'Nestlé'
-        stock_data = data.query(f'stock_name=="{stock_name}"')
-        data_range = get_data_range(stock_data)
-        simulated_stock = simulated_stocks.get(stock_name)
-        df = pd.DataFrame(simulated_stock, index=data_range, columns=[f'sim_{i}_{stock_name}' for i in range(
-            simulated_stock.shape[1])])
-        s = df.stack()
-        df = pd.DataFrame(s)
-        df.reset_index(drop=False,inplace=True)
-        df.columns = ['Date', 'simulation_name', 'Adj Close Price simulated']
-        return df
 
 @pytest.fixture
-def scenarios_portfolio( weighted_sim_stocks:dict) -> np.array:
+def df_simulated_stock(data: pd.DataFrame, simulated_stocks: dict) -> pd.DataFrame:
+    stock_name = "Nestlé"
+    chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    params["chosen_stocks"] = chosen_stocks
+    params["data_range"] = get_data_range(data, params)
+
+    data_range = params.get("data_range")
+    simulated_stock = simulated_stocks.get(stock_name)
+    df = pd.DataFrame(
+        simulated_stock,
+        index=data_range,
+        columns=[f"sim_{i}_{stock_name}" for i in range(simulated_stock.shape[1])],
+    )
+    s = df.stack()
+    df = pd.DataFrame(s)
+    df.reset_index(drop=False, inplace=True)
+    df.columns = ["Date", "simulation_name", "Adj Close Price simulated"]
+    return df
+
+
+@pytest.fixture
+def scenarios_portfolio(weighted_sim_stocks: dict) -> np.array:
     scenarios_portfolio = np.sum(list(weighted_sim_stocks.values()), axis=0)
     return scenarios_portfolio
 
+
 @pytest.fixture
-def best_and_worst_scenarios(scenarios_portfolio:np.array) -> Scenarios:
+def best_and_worst_scenarios(scenarios_portfolio: np.array) -> Scenarios:
     last_sim_portfolio_prices = scenarios_portfolio[-1, :]
     first_value = scenarios_portfolio[0, :].mean()
     lower_quantile_lvl = 0.05
@@ -213,76 +235,149 @@ def best_and_worst_scenarios(scenarios_portfolio:np.array) -> Scenarios:
     best_scenario = np.quantile(last_sim_portfolio_prices, q=upper_quantile_lvl)
     worst_yearly_return = (worst_scenario - first_value) / first_value
     best_yearly_return = (best_scenario - first_value) / first_value
-    worst_yearly_return_str = '{:.2%}'.format(worst_yearly_return)
-    best_yearly_return_str = '{:.2%}'.format(best_yearly_return)
-    best_and_worst_scenario = Scenarios(worst_yearly_return, best_yearly_return, worst_yearly_return_str,
-                                best_yearly_return_str)
+    worst_yearly_return_str = "{:.2%}".format(worst_yearly_return)
+    best_yearly_return_str = "{:.2%}".format(best_yearly_return)
+    best_and_worst_scenario = Scenarios(
+        worst_yearly_return,
+        best_yearly_return,
+        worst_yearly_return_str,
+        best_yearly_return_str,
+    )
     return best_and_worst_scenario
 
-class TestPortfolioOptimization:
 
-    def test_get_best_and_worst_scenarios(self, scenarios_portfolio:np.array) -> None:
+@pytest.fixture
+def simulations(data: pd.DataFrame) -> Simulations:
+    nb_simulations = 100
+    chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    params["chosen_stocks"] = chosen_stocks
+    params["data_range"] = get_data_range(data, params)
+
+    optimal_portfolio = get_portfolio_with(
+        simulated_portfolios,
+        lowest_volatility=True,
+        highest_return=True,
+        pretty_print_perc=False,
+    ).to_dict()
+
+    simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
+
+    weighted_sim_stocks = weight_simulated_stocks(simulated_stocks, optimal_portfolio)
+    simulations_optimal_portfolio = get_scenarios_portfolio(weighted_sim_stocks)
+    scenarios_optimal_portfolio = get_best_and_worst_scenarios(
+        simulations_optimal_portfolio
+    )
+    simulations_optimal_portfolio_df = get_df_simulated_stock(
+        "optimal_portfolio", simulations_optimal_portfolio, params
+    )
+    simulations = Simulations(
+        simulated_stocks,
+        weighted_sim_stocks,
+        simulations_optimal_portfolio_df,
+        scenarios_optimal_portfolio,
+    )
+    return simulations
+
+
+class TestPortfolioOptimization:
+    def test_get_scenarios(
+        self, data: pd.DataFrame, simulated_portfolios: pd.DataFrame
+    ) -> None:
+        chosen_stocks = list(params.get("STOCKS_INFO").keys())
+        params["chosen_stocks"] = chosen_stocks
+        params["data_range"] = get_data_range(data, params)
+
+        optimal_portfolio = get_portfolio_with(
+            simulated_portfolios,
+            lowest_volatility=True,
+            highest_return=True,
+            pretty_print_perc=False,
+        ).to_dict()
+        simulations = get_simulations(data, 100, optimal_portfolio, params)
+        assert isinstance(simulations, Simulations)
+        assert isinstance(simulations.simulated_stocks, dict)
+        assert isinstance(simulations.weighted_sim_stocks, dict)
+        assert isinstance(simulations.simulations_optimal_portfolio_df, pd.DataFrame)
+        assert isinstance(simulations.scenario, Scenarios)
+
+    def test_get_best_and_worst_scenarios(self, scenarios_portfolio: np.array) -> None:
         scenarios = get_best_and_worst_scenarios(scenarios_portfolio)
-        assert isinstance(scenarios, Scenarios), f'{type(best_and_worst_scenarios)}'
+        assert isinstance(scenarios, Scenarios), f"{type(best_and_worst_scenarios)}"
         assert scenarios.worst < scenarios.best
 
-
-    def test_get_scenarios_portfolio_df(self, ):
-        pass
-
-    def test_get_scenarios_portfolio(self, weighted_sim_stocks:dict) -> None:
-        stock_name = 'Nestlé'
+    def test_get_scenarios_portfolio(self, weighted_sim_stocks: dict) -> None:
+        stock_name = "Nestlé"
         stock_shape = weighted_sim_stocks.get(stock_name).shape
 
         scenarios_portfolio = get_scenarios_portfolio(weighted_sim_stocks)
 
-        assert type(scenarios_portfolio).__name__ == 'ndarray'
+        assert type(scenarios_portfolio).__name__ == "ndarray"
         assert scenarios_portfolio.shape == stock_shape
 
-    def test_get_df_simulated_stocks(self, data:pd.DataFrame, simulated_stocks:dict) -> pd.DataFrame:
-        stock_name = 'Nestlé'
-        df_simulated_stock = get_df_simulated_stock(stock_name, data, simulated_stocks)
-        for col in ['Date', 'simulation_name', 'Adj Close Price simulated']:
+    def test_get_df_simulated_stocks(
+        self, data: pd.DataFrame, simulated_stocks: dict
+    ) -> pd.DataFrame:
+        stock_name = "Nestlé"
+        chosen_stocks = list(params.get("STOCKS_INFO").keys())
+        params["chosen_stocks"] = chosen_stocks
+        params["data_range"] = get_data_range(data, params)
+        df_simulated_stock = get_df_simulated_stock(
+            stock_name, simulated_stocks, params
+        )
+        for col in ["Date", "simulation_name", "Adj Close Price simulated"]:
             assert col in df_simulated_stock.columns
 
-
-    def test_weight_stocks(self, simulated_stocks:dict, simulated_portfolios:pd.DataFrame) -> None:
+    def test_weight_stocks(
+        self, simulated_stocks: dict, simulated_portfolios: pd.DataFrame
+    ) -> None:
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         params["chosen_stocks"] = chosen_stocks
-        optimal_portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=True, highest_return=True)
-        weighted_sim_stocks = weight_simulated_stocks(simulated_stocks, optimal_portfolio)
+        optimal_portfolio = get_portfolio_with(
+            simulated_portfolios, lowest_volatility=True, highest_return=True
+        )
+        weighted_sim_stocks = weight_simulated_stocks(
+            simulated_stocks, optimal_portfolio
+        )
         assert isinstance(weighted_sim_stocks, dict)
-        assert len(weighted_sim_stocks) == len(params.get('chosen_stocks'))
+        assert len(weighted_sim_stocks) == len(params.get("chosen_stocks"))
 
-    def test_get_simulated_stocks(self, data:pd.DataFrame)  -> None:
+    def test_get_simulated_stocks(self, data: pd.DataFrame) -> None:
         nb_simulations = 100
         chosen_stocks = list(params.get("STOCKS_INFO").keys())
         params["chosen_stocks"] = chosen_stocks
+        params["data_range"] = get_data_range(data, params)
         simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
         assert isinstance(simulated_stocks, dict)
-        assert len(simulated_stocks) == len(params.get('chosen_stocks'))
+        assert len(simulated_stocks) == len(params.get("chosen_stocks"))
 
-    def test_get_simulated_stock(self, data:pd.DataFrame)  -> None:
-        stock_name = 'Nestlé'
+    def test_get_simulated_stock(self, data: pd.DataFrame) -> None:
+        stock_name = "Nestlé"
         nb_simulations = 100
-        simulated_stock = get_simulated_stock(stock_name, data, nb_simulations)
-        assert type(simulated_stock).__name__ == 'ndarray'
+        params["data_range"] = get_data_range(data, params)
+        simulated_stock = get_simulated_stock(stock_name, data, nb_simulations, params)
+        assert type(simulated_stock).__name__ == "ndarray"
         assert simulated_stock.shape[1] == nb_simulations
 
-    def test_get_sharp_ratio(self, simulated_portfolios:pd.DataFrame) ->None:
-        assert 'sharpe_ratio' in simulated_portfolios.columns
+    def test_get_sharp_ratio(self, simulated_portfolios: pd.DataFrame) -> None:
+        assert "sharpe_ratio" in simulated_portfolios.columns
 
-    def test_get_portfolio_with(self, simulated_portfolios:pd.DataFrame) ->None:
+    def test_get_portfolio_with(self, simulated_portfolios: pd.DataFrame) -> None:
         portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=True)
-        assert portfolio.dtype.name == 'float64'
-        portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=True, pretty_print_perc=True)
-        assert portfolio.dtype.name == 'object'
+        assert portfolio.dtype.name == "float64"
+        portfolio = get_portfolio_with(
+            simulated_portfolios, lowest_volatility=True, pretty_print_perc=True
+        )
+        assert portfolio.dtype.name == "object"
         with pytest.raises(NotImplementedError) as e:
             get_portfolio_with(simulated_portfolios, lowest_volatility=False)
-        portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=False, highest_return=True)
-        assert portfolio.dtype.name == 'float64'
-        portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=True, highest_return=True)
-        assert portfolio.dtype.name == 'float64'
+        portfolio = get_portfolio_with(
+            simulated_portfolios, lowest_volatility=False, highest_return=True
+        )
+        assert portfolio.dtype.name == "float64"
+        portfolio = get_portfolio_with(
+            simulated_portfolios, lowest_volatility=True, highest_return=True
+        )
+        assert portfolio.dtype.name == "float64"
 
     def test_run_simulation(self, data):
         num_simulations = 1_000
