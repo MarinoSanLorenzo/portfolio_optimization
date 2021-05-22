@@ -82,6 +82,7 @@ def get_df_simulated_stock(
         simulated_stock = simulated_stocks.get(stock_name)
     except AttributeError:
         simulated_stock = simulated_stocks
+
     df = pd.DataFrame(
         simulated_stock,
         index=data_range,

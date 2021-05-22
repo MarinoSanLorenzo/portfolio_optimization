@@ -61,7 +61,7 @@ def main():
         data_step1, num_simulations, params
     )
 
-    summary_msg = get_investment_summary(portfolios_simulated)
+
 
     optimal_portfolio = get_portfolio_with(
         portfolios_simulated,
@@ -72,6 +72,8 @@ def main():
 
     params["data_range"] = get_data_range(data_step2, params)
     sim = get_simulations(data_step2, num_simulations_stock, optimal_portfolio, params)
+
+    summary_msg = get_investment_summary(portfolios_simulated)
 
     data = data_step2
 

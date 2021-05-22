@@ -31,7 +31,7 @@ def add_layout_compoment_for_simulated_stock_plots(
 ) -> list:
     components = []
     for stock_name, simulated_stock in simulated_stocks.items():
-        df_simulated_stock = get_df_simulated_stock(stock_name, data, simulated_stocks)
+        df_simulated_stock = get_df_simulated_stock(stock_name, simulated_stocks, params)
         fig = plot_simulated_stocks(
             df_simulated_stock,
             "Adj Close Price simulated",
