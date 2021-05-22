@@ -31,10 +31,13 @@ __all__ = [
     'get_scenarios_portfolio',
     'Scenarios',
     'get_best_and_worst_scenarios',
-    'get_data_range'
+    'get_data_range',
+    'get_simulations',
+    'Simulations'
 ]
 
-Simulations = namedtuple('Simulations', 'simulated_stocks weighted_sim_stocks scenario')
+Simulations = namedtuple('Simulations', 'simulated_stocks weighted_sim_stocks simulations_optimal_portfolio_df '
+                                        'scenario')
 
 PortfolioReturnsProperties = namedtuple(
     'PortfolioReturnsProperties',
@@ -56,8 +59,6 @@ def get_best_and_worst_scenarios(scenarios_portfolio:np.array, lower_quantile_lv
     best_yearly_return_str = '{:.2%}'.format(best_yearly_return)
     return Scenarios(worst_yearly_return, best_yearly_return, worst_yearly_return_str, best_yearly_return_str)
 
-def get_scenarios_portfolio_df() -> pd.DataFrame:
-    pass
 
 
 def get_scenarios_portfolio( weighted_sim_stocks:dict) -> np.array:
@@ -66,7 +67,10 @@ def get_scenarios_portfolio( weighted_sim_stocks:dict) -> np.array:
 
 def get_df_simulated_stock(stock_name:str, simulated_stocks: dict, params:dict) -> pd.DataFrame:
     data_range = params.get('data_range')
-    simulated_stock = simulated_stocks.get(stock_name)
+    try:
+        simulated_stock = simulated_stocks.get(stock_name)
+    except AttributeError:
+        simulated_stock = simulated_stocks
     df = pd.DataFrame(simulated_stock, index=data_range, columns=[f'sim_{i}_{stock_name}' for i in range(
         simulated_stock.shape[1])])
     s = df.stack()
@@ -75,13 +79,15 @@ def get_df_simulated_stock(stock_name:str, simulated_stocks: dict, params:dict) 
     df.columns = ['Date', 'simulation_name', 'Adj Close Price simulated']
     return df
 
-def get_scenarios(data:pd.DataFrame, nb_simulations:int, optimal_portfolio:dict,params:dict) -> Simulations:
+def get_simulations(data:pd.DataFrame, nb_simulations:int, optimal_portfolio:dict,params:dict) -> Simulations:
     simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
 
     weighted_sim_stocks = weight_simulated_stocks(simulated_stocks, optimal_portfolio)
-    siimulations_optimal_portfolio = get_scenarios_portfolio(weighted_sim_stocks)
-    scenarios_optimal_portfolio = get_best_and_worst_scenarios(siimulations_optimal_portfolio)
-    return Simulations(simulated_stocks, weighted_sim_stocks, siimulations_optimal_portfolio, scenarios_optimal_portfolio)
+    simulations_optimal_portfolio = get_scenarios_portfolio(weighted_sim_stocks)
+    scenarios_optimal_portfolio = get_best_and_worst_scenarios(simulations_optimal_portfolio)
+    simulations_optimal_portfolio_df = get_df_simulated_stock('optimal_portfolio', simulations_optimal_portfolio,
+                                                             params)
+    return Simulations(simulated_stocks, weighted_sim_stocks, simulations_optimal_portfolio_df, scenarios_optimal_portfolio)
 
 
 def weight_simulated_stocks(simulated_stocks: dict, optimal_portfolio:dict) -> dict:
@@ -94,11 +100,11 @@ def weight_simulated_stocks(simulated_stocks: dict, optimal_portfolio:dict) -> d
 
 
 def get_simulated_stocks( data:pd.DataFrame, nb_simulations:int, params:dict) ->dict:
-    return {stock_name:get_simulated_stock(stock_name, data, nb_simulations) for stock_name in params.get(
+    return {stock_name:get_simulated_stock(stock_name, data, nb_simulations, params) for stock_name in params.get(
         'chosen_stocks')}
 
 def get_data_range(data:pd.DataFrame, params:dict) -> pd.DatetimeIndex:
-    stock_name = list(params.get('chosen_stocks').keys())[0]
+    stock_name = params.get('chosen_stocks')[0]
     stock_data = data.query(f'stock_name=="{stock_name}"')
     last_observed_date = stock_data.index[-1]
     first_simulated_day = last_observed_date + datetime.timedelta(days=1)
@@ -107,9 +113,9 @@ def get_data_range(data:pd.DataFrame, params:dict) -> pd.DatetimeIndex:
 
 
 def get_simulated_stock(stock_name:str, data:pd.DataFrame, nb_simulations:int, params:dict) -> np.array:
+    data_range = params.get('data_range')
     stock_data = data.query(f'stock_name=="{stock_name}"')
     last_observed_value = stock_data['Adj Close'][stock_data.last_valid_index()]
-    data_range = get_data_range(stock_data, params)
     mean_returns = stock_data.returns.mean()
     std_returns = stock_data.returns.std()
     brownian_motion = np.random.normal(mean_returns, std_returns, (len(data_range), nb_simulations))

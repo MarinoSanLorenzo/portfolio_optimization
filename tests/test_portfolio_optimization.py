@@ -169,6 +169,7 @@ def simulated_stocks(data:pd.DataFrame) -> dict:
     nb_simulations = 100
     chosen_stocks = list(params.get("STOCKS_INFO").keys())
     params["chosen_stocks"] = chosen_stocks
+    params['data_range'] = get_data_range(data, params)
     simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
     return simulated_stocks
 
@@ -187,8 +188,11 @@ def weighted_sim_stocks(simulated_stocks: dict, simulated_portfolios: pd.DataFra
 @pytest.fixture
 def df_simulated_stock(data:pd.DataFrame, simulated_stocks:dict) -> pd.DataFrame:
         stock_name = 'Nestlé'
-        stock_data = data.query(f'stock_name=="{stock_name}"')
-        data_range = get_data_range(stock_data)
+        chosen_stocks = list(params.get("STOCKS_INFO").keys())
+        params["chosen_stocks"] = chosen_stocks
+        params['data_range'] = get_data_range(data, params)
+
+        data_range = params.get('data_range')
         simulated_stock = simulated_stocks.get(stock_name)
         df = pd.DataFrame(simulated_stock, index=data_range, columns=[f'sim_{i}_{stock_name}' for i in range(
             simulated_stock.shape[1])])
@@ -219,7 +223,44 @@ def best_and_worst_scenarios(scenarios_portfolio:np.array) -> Scenarios:
                                 best_yearly_return_str)
     return best_and_worst_scenario
 
+@pytest.fixture
+def simulations(data:pd.DataFrame) -> Simulations:
+    nb_simulations = 100
+    chosen_stocks = list(params.get("STOCKS_INFO").keys())
+    params["chosen_stocks"] = chosen_stocks
+    params['data_range'] = get_data_range(data, params)
+
+    optimal_portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=True,
+                                           highest_return=True,
+                                           pretty_print_perc=False).to_dict()
+
+    simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
+
+    weighted_sim_stocks = weight_simulated_stocks(simulated_stocks, optimal_portfolio)
+    simulations_optimal_portfolio = get_scenarios_portfolio(weighted_sim_stocks)
+    scenarios_optimal_portfolio = get_best_and_worst_scenarios(simulations_optimal_portfolio)
+    simulations_optimal_portfolio_df = get_df_simulated_stock('optimal_portfolio', simulations_optimal_portfolio,
+                                                             params)
+    simulations = Simulations(simulated_stocks, weighted_sim_stocks, simulations_optimal_portfolio_df, scenarios_optimal_portfolio)
+    return simulations
+
 class TestPortfolioOptimization:
+
+
+    def test_get_scenarios(self, data:pd.DataFrame, simulated_portfolios:pd.DataFrame) -> None:
+        chosen_stocks = list(params.get("STOCKS_INFO").keys())
+        params["chosen_stocks"] = chosen_stocks
+        params['data_range'] = get_data_range(data, params)
+
+        optimal_portfolio = get_portfolio_with(simulated_portfolios, lowest_volatility=True,
+                                               highest_return=True,
+                                               pretty_print_perc=False).to_dict()
+        simulations = get_simulations(data,100, optimal_portfolio, params)
+        assert isinstance(simulations, Simulations)
+        assert isinstance(simulations.simulated_stocks, dict)
+        assert isinstance(simulations.weighted_sim_stocks, dict)
+        assert isinstance(simulations.simulations_optimal_portfolio_df, pd.DataFrame)
+        assert isinstance(simulations.scenario, Scenarios)
 
     def test_get_best_and_worst_scenarios(self, scenarios_portfolio:np.array) -> None:
         scenarios = get_best_and_worst_scenarios(scenarios_portfolio)
@@ -238,6 +279,8 @@ class TestPortfolioOptimization:
 
     def test_get_df_simulated_stocks(self, data:pd.DataFrame, simulated_stocks:dict) -> pd.DataFrame:
         stock_name = 'Nestlé'
+        chosen_stocks = list(params.get("STOCKS_INFO").keys())
+        params["chosen_stocks"] = chosen_stocks
         params['data_range'] = get_data_range(data, params)
         df_simulated_stock = get_df_simulated_stock(stock_name, simulated_stocks, params)
         for col in ['Date', 'simulation_name', 'Adj Close Price simulated']:
