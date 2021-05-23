@@ -39,4 +39,16 @@ params = {
     'investment_amount': 1_000,
     'lower_quantile_lvl': 0.05,
     'upper_quantile_lvl': 0.95,
+    'params_to_show':['STOCKS_INFO',
+                         'CODE_NAME_MAPPING',
+                         'CODE_RANK_MAPPING',
+                         'STYLE_SHEET',
+                         'APP_NAME',
+                         'START_DATE',
+                         'END_DATE',
+                         'num_simulations',
+                         'num_simulations_stock',
+                         'investment_amount',
+                         'lower_quantile_lvl',
+                         'upper_quantile_lvl']
 }
