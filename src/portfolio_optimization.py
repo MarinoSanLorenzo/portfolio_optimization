@@ -38,7 +38,7 @@ __all__ = [
 
 Simulations = namedtuple(
     "Simulations",
-    "simulated_stocks weighted_sim_stocks simulations_optimal_portfolio_df " "scenario",
+    "simulated_stocks weighted_sim_stocks simulations_optimal_portfolio_df scenario",
 )
 
 PortfolioReturnsProperties = namedtuple(
@@ -46,7 +46,7 @@ PortfolioReturnsProperties = namedtuple(
     "variance_portfolio_return share_allocation_df " "expected_portfolio_return",
 )
 
-Scenarios = namedtuple("Scenarios", "worst best worst_str " "best_str")
+Scenarios = namedtuple("Scenarios", "worst best worst_str best_str")
 
 
 def get_best_and_worst_scenarios(
@@ -96,14 +96,18 @@ def get_df_simulated_stock(
 
 
 def get_simulations(
-    data: pd.DataFrame, nb_simulations: int, optimal_portfolio: dict, params: dict
+    data: pd.DataFrame,optimal_portfolio: dict, params: dict
 ) -> Simulations:
-    simulated_stocks = get_simulated_stocks(data, nb_simulations, params)
+    nb_simulations = params.get('num_simulations_stock')
+    lower_quantile_lvl = params.get('lower_quantile_lvl')
+    upper_quantile_lvl = params.get('upper_quantile_lvl')
+
+    simulated_stocks = get_simulated_stocks(data, params)
 
     weighted_sim_stocks = weight_simulated_stocks(simulated_stocks, optimal_portfolio)
     simulations_optimal_portfolio = get_scenarios_portfolio(weighted_sim_stocks)
     scenarios_optimal_portfolio = get_best_and_worst_scenarios(
-        simulations_optimal_portfolio
+        simulations_optimal_portfolio, lower_quantile_lvl=lower_quantile_lvl, upper_quantile_lvl=upper_quantile_lvl
     )
     simulations_optimal_portfolio_df = get_df_simulated_stock(
         "optimal_portfolio", simulations_optimal_portfolio, params
@@ -125,9 +129,10 @@ def weight_simulated_stocks(simulated_stocks: dict, optimal_portfolio: dict) -> 
     return weighted_sim_stocks
 
 
-def get_simulated_stocks(data: pd.DataFrame, nb_simulations: int, params: dict) -> dict:
+def get_simulated_stocks(data: pd.DataFrame, params: dict) -> dict:
+
     return {
-        stock_name: get_simulated_stock(stock_name, data, nb_simulations, params)
+        stock_name: get_simulated_stock(stock_name, data, params)
         for stock_name in params.get("chosen_stocks")
     }
 
@@ -145,8 +150,9 @@ def get_data_range(data: pd.DataFrame, params: dict) -> pd.DatetimeIndex:
 
 
 def get_simulated_stock(
-    stock_name: str, data: pd.DataFrame, nb_simulations: int, params: dict
+    stock_name: str, data: pd.DataFrame, params: dict
 ) -> np.array:
+    nb_simulations = params.get('num_simulations_stock')
     data_range = params.get("data_range")
     stock_data = data.query(f'stock_name=="{stock_name}"')
     last_observed_value = stock_data["Adj Close"][stock_data.last_valid_index()]
@@ -192,7 +198,7 @@ def get_portfolio_with(
     return portfolio
 
 
-def get_investment_summary(portfolios_simulated: pd.DataFrame) -> list:
+def get_investment_summary(portfolios_simulated: pd.DataFrame, sim:Simulations, params:dict) -> list:
     portfolio_with_lowest_volatility = get_portfolio_with(
         portfolios_simulated,
         lowest_volatility=True,
@@ -212,7 +218,7 @@ def get_investment_summary(portfolios_simulated: pd.DataFrame) -> list:
         pretty_print_perc=True,
     )
 
-    summary_msg1 = "Smart Invest found few portfolios out of your simulations."
+    summary_msg1 = f'{params.get("APP_NAME")} found few portfolios out of your simulations.'
     summary_msg2 = "The portfolio with lowest volatility is presented as follow:\n"
     summary_msg3 = html.Ul(
         children=[
@@ -229,6 +235,31 @@ def get_investment_summary(portfolios_simulated: pd.DataFrame) -> list:
     summary_msg7 = html.Ul(
         children=[html.Li(f"{k}:\t{v}") for k, v in optimal_portfolio.items()]
     )
+    investment_amount = params.get('investment_amount')
+
+    summary_msg8 = f'From what we simulated for you, here is how much you can earn or loose by investing ' \
+                   f'{investment_amount} in the optimal portfolio.\n' \
+                   f'{params.get("APP_NAME")}  would like to remind you that you should be responsible for your investments and ' \
+                   f'that we are not responsible for your potential losses. ' \
+                   f'Our estimations assume naively that the distribution of return is normal while we know that the ' \
+                   f'distribution of returns have fatter tails than a normal and is negatively skewed, meaning that ' \
+                   f'extreme negative returns are more frequent than extreme positive returns'
+
+
+    scenario = sim.scenario
+
+
+    min_losses = round(investment_amount*scenario.worst,2)
+    min_gain = round(investment_amount*scenario.best,2)
+    perc_case = f'{params.get("lower_quantile_lvl")*100}%'
+    summary_msg9 = f'Given that you invested:\t{investment_amount}. ' \
+                   f'You have {perc_case} of chance of loosing minimum {min_losses} in the {perc_case} worst cases ' \
+                   f'and\n' \
+                   f'you have {perc_case} of chance of earning minimum {min_gain} in the {perc_case} best cases.\n' \
+                   f'The worst and best portfolio return are {scenario.worst_str} and {scenario.best_str} ' \
+                   f'respectively.'
+
+
 
     return [
         html.Div(summary_msg1),
@@ -241,14 +272,22 @@ def get_investment_summary(portfolios_simulated: pd.DataFrame) -> list:
         html.Hr(),
         summary_msg6,
         summary_msg7,
+        html.Hr(),
+        summary_msg8,
+        html.Hr(),
+        summary_msg9,
+
+
     ]
 
 
 def run_portfolios_simulations(
-    data: pd.DataFrame, num_simulations: int, params: dict
+    data: pd.DataFrame, params: dict
 ) -> pd.DataFrame:
+    num_simulations = params.get('num_simulations')
     chosen_stocks = params.get("chosen_stocks")
     num_assets = len(chosen_stocks)
+
     returns_yearly = get_returns(data).returns_yearly
     covariance_tbl = get_covariance_tbl(data).drop(columns=["stock_name"])
     returns = []
