@@ -22,6 +22,8 @@ def get_layout(params: dict) -> html.Div:
                                 f'You invested in {", ".join(params.get("chosen_stocks"))}'
                             ),
                             params.get("your_investment_data"),
+                            html.Hr(),
+                            params.get('investment_data_component')
                         ],
                     ),
                     dcc.Tab(

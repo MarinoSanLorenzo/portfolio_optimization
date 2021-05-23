@@ -235,28 +235,29 @@ def get_investment_summary(portfolios_simulated: pd.DataFrame, sim:Simulations, 
     summary_msg7 = html.Ul(
         children=[html.Li(f"{k}:\t{v}") for k, v in optimal_portfolio.items()]
     )
-    investment_amount = get_data('investment_amount')
+    investment_amount = params.get('investment_amount')
 
     summary_msg8 = f'From what we simulated for you, here is how much you can earn or loose by investing ' \
-                   f'{investment_amount} in the optimal portfolio\n' \
+                   f'{investment_amount} in the optimal portfolio.\n' \
                    f'{params.get("APP_NAME")}  would like to remind you that you should be responsible for your investments and ' \
-                   f'that we are not responsible for your potential losses' \
+                   f'that we are not responsible for your potential losses. ' \
                    f'Our estimations assume naively that the distribution of return is normal while we know that the ' \
                    f'distribution of returns have fatter tails than a normal and is negatively skewed, meaning that ' \
                    f'extreme negative returns are more frequent than extreme positive returns'
 
-    investment_amount = get_data('investment_amount')
-    scenario = get_data('scenario')
+
+    scenario = sim.scenario
 
 
-    min_losses = investment_amount*scenario.worst
-    min_gain = investment_amount*scenario.best
-    perc_case = f'{params.get("lower_quantile_lvl")}%'
-    summary_msg9 = f'Given that you invested:\t{investment_amount}' \
-                   f'You have {perc_case} of chance of loosing minimum {min_losses} in the {perc_case} worst cases' \
+    min_losses = round(investment_amount*scenario.worst,2)
+    min_gain = round(investment_amount*scenario.best,2)
+    perc_case = f'{params.get("lower_quantile_lvl")*100}%'
+    summary_msg9 = f'Given that you invested:\t{investment_amount}. ' \
+                   f'You have {perc_case} of chance of loosing minimum {min_losses} in the {perc_case} worst cases ' \
                    f'and\n' \
-                   f'You have {perc_case} of chance of earning minimum{min_losses} in the {perc_case} best cases.\n' \
-                   f'The best and worst portfolio return are {scenario.worst_str} and {scenario.best_str} respectively.'
+                   f'you have {perc_case} of chance of earning minimum {min_gain} in the {perc_case} best cases.\n' \
+                   f'The worst and best portfolio return are {scenario.worst_str} and {scenario.best_str} ' \
+                   f'respectively.'
 
 
 

@@ -3,6 +3,7 @@ from pandas_datareader import data as web
 from collections import defaultdict
 from src.constants import Stock
 import datetime
+
 __all__ = [
     "get_data",
     "process_data",
@@ -13,7 +14,6 @@ __all__ = [
     "get_stock_data_returns",
     "get_investment_data",
     'get_user_inputs',
-    'get_user_inputs'
 ]
 def get_stock_input(params:dict) -> list:
     stock_info = params.get("STOCKS_INFO")
@@ -84,12 +84,6 @@ def get_date_input(var_:str,params:dict)-> datetime.datetime:
 def get_user_inputs(params:dict) -> dict:
     answer = input('Default mode?[Y/N]')
     if answer in ['Y','y']:
-        params['num_simulations'] = 10_000
-        params['num_simulations_stock'] = 100
-        params['investment_amount'] = 1_000
-        params['lower_quantile_lvl'] = 0.05
-        params['upper_quantile_lvl'] = 0.95
-
         params["chosen_stocks"] = list(params.get("STOCKS_INFO").keys())
 
         return params

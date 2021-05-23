@@ -1,4 +1,5 @@
 import pandas as pd
+import dash_html_components as html
 from dash_main import app
 from src.frontend.callbacks import *
 from src.frontend.plots import *
@@ -9,12 +10,8 @@ from src.frontend.components import *
 from src.portfolio_optimization import *
 
 
-### inputs
-# TODO:
-# list of stocks (list of strings) multidropdown menu
-# filter by sector (list of strings) multidropdown menu
-# number of simulations (int)
-# value of investment (float)
+
+params = get_user_inputs(params)
 
 
 def main():
@@ -22,14 +19,8 @@ def main():
     #################       BACKEND                  #################
     ###########################################################
 
-    # inputs
-    # stock_name = input(f'Insert your stock!')
 
-    params["stocks_info"] = params.get("STOCKS_INFO")
-
-    params = get_user_inputs(params)
     chosen_stocks = params.get('chosen_stocks')
-
 
     investment_data = get_investment_data(params)
     your_investment_data = investment_data[investment_data.name.isin(chosen_stocks)]
@@ -69,7 +60,7 @@ def main():
     params["data_range"] = get_data_range(data_step2, params)
     sim = get_simulations(data_step2, optimal_portfolio, params)
 
-    summary_msg = get_investment_summary(portfolios_simulated)
+    summary_msg = get_investment_summary(portfolios_simulated, sim, params)
 
     data = data_step2
 
@@ -117,6 +108,9 @@ def main():
         title="Optimal Portfolio simulations",
     )
 
+    params['investment_data_component'] =  html.Ul(
+        children=[html.Li(f"{k}:\t{v}") for k, v in params.items()]
+    )
     app.layout = get_layout(params)
     app.run_server(debug=True)
 

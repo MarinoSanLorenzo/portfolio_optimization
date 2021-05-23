@@ -34,4 +34,9 @@ params = {
     'APP_NAME':'Smart Invest',
     "START_DATE" : datetime.datetime(2019, 1, 1),
     "END_DATE" : datetime.date.today(),
+    'num_simulations': 100,
+    'num_simulations_stock': 100,
+    'investment_amount': 1_000,
+    'lower_quantile_lvl': 0.05,
+    'upper_quantile_lvl': 0.95,
 }
