@@ -66,7 +66,7 @@ def get_date_input(var_:str,params:dict)-> datetime.datetime:
     done=False
     date = params.get(var_)
     while not done:
-        answer = input(f'Would you like to change the date {date}?[Y/N]')
+        answer = input(f'Would you like to change the {var_.lower()} {date}?[Y/N]')
         if answer in ['Y','y']:
            year = get_numerical_input('Year')
            month = get_numerical_input('Month')
