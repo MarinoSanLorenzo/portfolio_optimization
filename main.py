@@ -10,7 +10,7 @@ from src.frontend.components import *
 from src.portfolio_optimization import *
 
 
-
+#TODO:check portfolio property and variance function when changing the number of portfolio
 params = get_user_inputs(params)
 
 
