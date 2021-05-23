@@ -109,7 +109,7 @@ def main():
     )
 
     params['investment_data_component'] =  html.Ul(
-        children=[html.Li(f"{k}:\t{v}") for k, v in params.items()]
+        children=[html.Li(f"{k}:\t{v}") for k, v in params.items() if k in params.get('params_to_show')]
     )
     app.layout = get_layout(params)
     app.run_server(debug=True)
