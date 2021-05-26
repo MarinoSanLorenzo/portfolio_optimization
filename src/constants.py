@@ -26,12 +26,23 @@ stocks_info = {
 code_name_mapping = {v.code: v.name for v in stocks_info.values()}
 code_rank_mapping = {v.code: v.sector for v in stocks_info.values()}
 
+external_stylesheets = [
+    # 'https://codepen.io/chriddyp/pen/bWLwgP.css',
+    ' https://codepen.io/chriddyp/pen/dZVMbK.css',
+    {
+        'href': 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css',
+        'rel': 'stylesheet',
+        'integrity': 'sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO',
+        'crossorigin': 'anonymous'
+    }
+]
 params = {
     "STOCKS_INFO": stocks_info,
     "CODE_NAME_MAPPING": code_name_mapping,
     "CODE_RANK_MAPPING": code_rank_mapping,
-    "STYLE_SHEET": ["https://codepen.io/chriddyp/pen/bWLwgP.css"],
-    'APP_NAME':'Smart Invest',
+    # "STYLE_SHEET": ["https://codepen.io/chriddyp/pen/bWLwgP.css"],
+    "STYLE_SHEET": external_stylesheets,
+    'APP_NAME':'Wealth Management app',
     "START_DATE" : datetime.datetime(2019, 1, 1),
     "END_DATE" : datetime.date.today(),
     'num_simulations': 100,
